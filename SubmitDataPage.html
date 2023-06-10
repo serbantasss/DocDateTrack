@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SubmitDataPage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script >
+        $(document).ready(function() {
+            $("#data-form").submit(function(e) {
+                e.preventDefault(); // Prevent the form from submitting normally
+
+                // Get form values
+                const docType = $('#docType').val();
+                const docOwner = $('#docOwner').val();
+                const docExpDate = $('#docExpDate').val();
+                const docFile = $('#docFile').prop('files')[0];
+
+                // Create a FormData object to send file data
+                let formData = new FormData();
+                formData.append('docType', docType);
+                formData.append('docOwner', docOwner);
+                formData.append('docExpDate', docExpDate);
+                formData.append('docFile', docFile['name']);
+                console.log(formData.geta);
+                // Send form data via AJAX
+                $.ajax({
+                    url: 'http://localhost:63342/DocDate/docData.json',
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        // Handle success response here
+                        console.log('Form data successfully submitted!');
+                    }
+                });
+            });
+        });
+
+    </script>
+</head>
+
+<body>
+<h1>Document Submission</h1>
+<form id="data-form">
+
+    <label for="docType">Enter type of document:
+        <input required="required" type="text" id="docType" placeholder="Ex. BULETIN" value="BULETIN" >
+    </label>
+
+    <label for="docOwner">Enter owner of document:
+        <input required="required" type="text" id="docOwner" placeholder="E.g. Florin Bantas" value="Florin Bantas">
+    </label>
+
+    <label for="docExpDate">Enter expiring date of document:
+        <input required="required" type="date" id="docExpDate" value="2029-09-29">
+    </label>
+
+    <label for="docFile">Select document:
+        <input type="file" id="docFile">
+    </label>
+
+    <input type="submit" id="send-button">
+</form>
+
+</body>
+</html>
