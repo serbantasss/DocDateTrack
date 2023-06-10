@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="css/submit.css">
+</head>
+<body>
+<h1>Update Document</h1>
+<form id="update-form">
+  <label for="doc-id">Doc ID:</label>
+  <input type="text" id="doc-id" name="doc-id" required>
+
+  <label for="doc-date">New Doc Date:</label>
+  <input type="date" id="doc-date" name="doc-date" required>
+
+  <label for="document">New Document:</label>
+  <input type="file" id="document" name="document" required>
+
+  <input type="submit" value="Update">
+</form>
+
+<script>
+  const updateForm = document.getElementById('update-form');
+
+  updateForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const docId = document.getElementById('doc-id').value;
+    const docDate = document.getElementById('doc-date').value;
+    const documentFile = document.getElementById('document').files[0];
+
+    // Perform the update operation and update the database
+    // Replace the code below with your actual update logic
+    console.log(`Updating document with ID: ${docId}`);
+    console.log(`New Doc Date: ${docDate}`);
+    console.log(`New Document File: ${documentFile.name}`);
+
+    // Clear the form after submission
+    updateForm.reset();
+  });
+</script>
+</body>
+</html>

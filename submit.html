@@ -28,6 +28,29 @@
 
     <input type="submit" id="send-button">
 </form>
+<script>
+    const form = document.getElementById('data-form');
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const docType = document.getElementById('docType').value;
+        const docOwner = document.getElementById('docOwner').value;
+        const docExpDate = document.getElementById('docExpDate').value;
+        const docFile = document.getElementById('docFile').files[0];
+
+        // Perform the submission and add the data to the database
+        // Replace the code below with your actual submission logic
+        console.log('Form submitted');
+        console.log('Document Type:', docType);
+        console.log('Document Owner:', docOwner);
+        console.log('Expiring Date:', docExpDate);
+        console.log('Document File:', docFile.name);
+
+        // Clear the form after submission
+        form.reset();
+    });
+</script>
 </body>
 
 </html>
