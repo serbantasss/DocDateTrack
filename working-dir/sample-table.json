@@ -1,0 +1,26 @@
+[
+  {
+    "docId": "1",
+    "docName": "BULETIN",
+    "docOwner": "Serban Bantas",
+    "docDate": "2028-05-01",
+    "docDownloadLink": "https://example.com/document1.pdf",
+    "docAddDate": "2023-05-01"
+  },
+  {
+    "docId": "2",
+    "docName": "Document 2",
+    "docOwner": "Jane Smith",
+    "docDate": "2023-05-05",
+    "docDownloadLink": "https://example.com/document2.pdf",
+    "docAddDate": "2023-05-05"
+  },
+  {
+    "docId": "3",
+    "docName": "Document 3",
+    "docOwner": "Bob Johnson",
+    "docDate": "2023-05-10",
+    "docDownloadLink": "https://example.com/document3.pdf",
+    "docAddDate": "2023-05-10"
+  }
+]

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document Table</title>
+  <link rel="stylesheet" type="text/css" href="css/table.css">
+</head>
+<body>
+<h1>Document Table</h1>
+<table id="document-table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Type</th>
+    <th>Owner</th>
+    <th>Expiration Date</th>
+    <th>Download Link</th>
+    <th>Added at</th>
+  </tr>
+  </thead>
+  <tbody id="table-body"></tbody>
+</table>
+
+<script>
+  // Function to fetch data from the database or local JSON file
+  function fetchData() {
+    fetch('database-endpoint') // Replace 'database-endpoint' with the actual API endpoint to fetch data from the database
+            .then(response => response.json())
+            .then(data => {
+              populateTable(data);
+            })
+            .catch(error => {
+              console.error("Failed to fetch data from the database. Using local JSON file instead.");
+              fetch('working-dir/sample-table.json') // Replace 'local-data.json' with the path to your local JSON file
+                      .then(response => response.json())
+                      .then(data => {
+                        populateTable(data);
+                      })
+                      .catch(error => {
+                        console.error("Failed to fetch local JSON file:", error);
+                      });
+            });
+  }
+
+  // Function to populate the table with data
+  function populateTable(data) {
+    const tableBody = document.getElementById('table-body');
+
+    data.forEach(record => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+                    <td>${record.docId}</td>
+                    <td>${record.docName}</td>
+                    <td>${record.docOwner}</td>
+                    <td>${record.docDate}</td>
+                    <td><a href="${record.docDownloadLink}">Download</a></td>
+                    <td>${record.docAddDate}</td>
+                `;
+      tableBody.appendChild(row);
+    });
+  }
+
+  // Fetch data when the page loads
+  fetchData();
+</script>
+</body>
+</html>
