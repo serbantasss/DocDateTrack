@@ -6,38 +6,31 @@ h1 {
     text-align: center;
 }
 
-form {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 30px;
-    border: 2px solid #ccc;
-    border-radius: 5px;
+#status-label {
+    text-align: center;
+    margin-top: 20px;
+    font-weight: bold;
 }
 
-label {
-    display: block;
-    margin-bottom: 10px;
+#buttons-container {
+    text-align: center;
+    margin-top: 50px;
 }
 
-input[type="text"],
-input[type="date"],
-input[type="file"] {
-    width: 380px;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
-
-input[type="submit"] {
+button {
     background-color: #4CAF50;
     color: white;
     border: none;
     padding: 10px 20px;
     cursor: pointer;
     border-radius: 5px;
+    margin: 10px;
 }
 
-input[type="submit"]:hover {
+button:hover {
     background-color: #45a049;
+}
+
+a {
+    text-decoration: none;
 }
