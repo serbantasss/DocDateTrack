@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SubmitDataPage</title>
+    <link rel="stylesheet" href="css/add-doc.css">
+</head>
+
+<body>
+<h1>Document Submission</h1>
+<form id="data-form">
+
+    <label for="docType">Enter type of document:
+        <input required="required" type="text" id="docType" placeholder="Ex. BULETIN" >
+    </label>
+
+    <label for="docOwner">Enter owner of document:
+        <input required="required" type="text" id="docOwner" placeholder="E.g. Florin Bantas" >
+    </label>
+
+    <label for="docExpDate">Enter expiring date of document:
+        <input required="required" type="date" id="docExpDate" >
+    </label>
+
+    <label for="docFile">Select document:
+        <input type="file" id="docFile">
+    </label>
+
+    <input type="submit" id="send-button">
+</form>
+</body>
+
+</html>
