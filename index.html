@@ -7,11 +7,29 @@
 </head>
 <body>
 <h1>Database Management System</h1>
-<div id="status-label">Database Status: Online</div>
+<div id="status-label">Database Status: <span id="connection-status"></span></div>
+<script>
+    function testDatabaseConnection() {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+            if (this.readyState === 4) {
+                if (this.status === 200) {
+                    document.getElementById("connection-status").innerHTML = "Online";
+                } else {
+                    document.getElementById("connection-status").innerHTML = "Offline";
+                }
+            }
+        };
+        xmlhttp.open("GET", "test-connectionphp.php", true);
+        xmlhttp.send();
+    }
+
+    testDatabaseConnection();
+</script>
 <div id="buttons-container">
-    <a href="submit.html"><button>Submit</button></a>
-    <a href="table.html"><button>View Table</button></a>
-    <a href="update.html"><button>Update Record</button></a>
+    <a href="/submit.html"><button>Submit</button></a>
+    <a href="/table.html"><button>View Table</button></a>
+    <a href="/update.html"><button>Update Record</button></a>
 </div>
 </body>
 </html>
