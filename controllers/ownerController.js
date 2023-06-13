@@ -67,11 +67,12 @@ exports.owner_create_post = [
                 errors: errors.array(),
             });
             return;
-        } else{
+        } else {
             await new_owner.save();
             res.redirect("/owners");
         }
-    })];
+    }),
+];
 
 // Display owner delete form on GET.
 exports.owner_delete_get = asyncHandler(async (req, res, next) => {
@@ -95,7 +96,7 @@ exports.owner_delete_get = asyncHandler(async (req, res, next) => {
 exports.owner_delete_post = asyncHandler(async (req, res, next) => {
     //res.send("NOT IMPLEMENTED: owner delete POST");
     const [owner, allDocumentsOfOwner] = await Promise.all([
-        Owner.findby(req.params.id).exec(),
+        Owner.findById(req.params.id).exec(),
         Document.find({ owner: req.params.id })
     ]);
     if (allDocumentsOfOwner.length > 0){
@@ -181,4 +182,5 @@ exports.owner_update_post = [
             await Owner.findByIdAndUpdate(req.params.id, updated_owner);
             res.redirect("/owners");
         }
-})];
+    },
+)];

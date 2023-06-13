@@ -7,6 +7,7 @@ const CategorySchema = new Schema({
     relation: {
         type: String,
         enum: ["Personal", "Munca", "Altele"],
+        default: "Personal",
     },
 });
 
