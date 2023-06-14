@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 
 const DocumentSchema = new Schema({
     owner: { type: Schema.Types.ObjectId, ref: "Owner", required: true },
-    category: [{ type: Schema.Types.ObjectId, ref: "Category", required: true }],
+    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     status: {
         type: String,
         enum: ["Updated", "Expired", "Update Soon"],

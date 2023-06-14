@@ -5,10 +5,12 @@ const router = express.Router();
 const owner_controller = require("../controllers/ownerController");
 const document_controller = require("../controllers/documentController");
 const category_controller = require("../controllers/categoryController");
+
+
 const asyncHandler = require("express-async-handler");
 const Document = require("../models/document");
 const Owner = require("../models/owner");
-const DocumentType = require("../models/category");
+const Category = require("../models/category");
 
 //Render Home Page.
 router.get('/', function(req, res, next) {
@@ -57,7 +59,7 @@ router.get("/document/:id/update", document_controller.document_update_get);
 router.get("/document/:id/update", document_controller.document_update_post);
 
 //GET request for list of documents.
-router.get("/documents", document_controller.owner_list);
+router.get("/documents", document_controller.document_list);
 
 /**
   OWNER ROUTES.
