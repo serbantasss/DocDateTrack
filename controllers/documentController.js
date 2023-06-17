@@ -23,12 +23,11 @@ const upload = multer({ storage: storage });
 // Display list of all documents.
 exports.document_list = asyncHandler(async (req, res, next) => {
 
-    const allDocuments = await Document.find({},)
-        .sort({ expire_date: 1})
-        .populate("owner")
+    const allDocuments = await Document.find({})
+        .sort({ expire_date_raw: 1})
         .exec();
 
-    res.render("document_list", { title: "Document List", document_list: allDocuments });
+    res.render("document_list", { title: "Document List", currPage: "documents" ,doclist: allDocuments });
 });
 
 // // Display detail page for a specific document.

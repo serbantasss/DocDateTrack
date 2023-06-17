@@ -1,0 +1,13 @@
+extends layout
+
+block content
+    main.container(role='main')
+        .starter-template
+            ul
+                each doc in doclist
+                    li
+                        #{doc.category.name}
+                        |  (#{doc.owner.name})
+
+                else
+                    li There are no books.

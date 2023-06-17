@@ -62,3 +62,7 @@ typings/
 
 #DS_STORE
 .DS_Store
+
+#oldfiles folders
+.oldshiz/
+

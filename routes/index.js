@@ -14,7 +14,7 @@ const Category = require("../models/category");
 
 //Render Home Page.
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', {title: "Home", currPage: "home"});
 });
 /*exports.index = asyncHandler(async (req, res, next) => {
   //res.send("NOT IMPLEMENTED: Site Home Page");
