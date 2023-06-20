@@ -137,16 +137,7 @@ exports.document_delete_post = asyncHandler(async (req, res, next) => {
 
 // Display document update form on GET.
 exports.document_update_get = asyncHandler(async (req, res, next) => {
-    const document = await Document.findById(req.params.id).exec();
-    if (!document) {
-        // Document not found.
-        res.redirect('/');
-        return;
-    }
-    res.render('document_form', {
-        title: 'Update Document',
-        document: document,
-    });
+    res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
 });
 
 // Handle document update on POST.
@@ -158,36 +149,6 @@ exports.document_update_post = [
         .isISO8601()
         .toDate(),
     asyncHandler(upload.single('document_file'), async (req, res, next) => {
-        // Check for validation errors.
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            // There are validation errors. Render the form again with sanitized values/error messages.
-            const [allOwners, allCategories] = await Promise.all([
-                Owner.find().exec(),
-                Category.find().exec(),
-            ]);
-            res.render('document_form', {
-                title: 'Update Document',
-                owners: allOwners,
-                categories: allCategories,
-                document: req.body,
-                errors: errors.array(),
-            });
-            return;
-        }
-
-        // No validation errors. Update the document.
-        const document = await Document.findById(req.params.id).exec();
-        if (!document) {
-            // Document not found.
-            res.redirect('/');
-            return;
-        }
-        document.expire_date = req.body.expire_date_raw;
-        if (req.file) {
-            document.document_file = req.file.path;
-        }
-        await document.save();
-        res.redirect('/');
+        res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
     }),
 ];

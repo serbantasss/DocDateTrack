@@ -7,11 +7,12 @@ const asyncHandler = require("express-async-handler");
 // Display list of all categories.
 exports.category_list = asyncHandler(async (req, res, next) => {
 
-    const allTypes = await Category.find().sort({ name: 1 }).exec();
+    const allCategories = await Category.find().sort({ name: 1 }).exec();
 
     res.render("category_list",{
         title: "Category List",
-        category_list: allTypes,
+        category_list: allCategories,
+        currPage: "category",
     })
 });
 
@@ -38,6 +39,7 @@ exports.category_list = asyncHandler(async (req, res, next) => {
 exports.category_create_get = (req, res, next) => {
     res.render("category_form",{
         title: "Create new Category",
+        currPage: 'categories'
     });
 };
 
