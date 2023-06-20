@@ -13,20 +13,20 @@ const helmet = require("helmet");
 const app = express();
 
 // Set up rate limiter: maximum of twenty requests per minute
-const RateLimit = require("express-rate-limit");
-const limiter = RateLimit({
-  windowMs: 10 * 1000, // 10 seconds
-  max: 10,
-});
-// Apply rate limiter to all requests
-app.use(limiter);
+// const RateLimit = require("express-rate-limit");
+// const limiter = RateLimit({
+//   windowMs: 10 * 1000, // 10 seconds
+//   max: 10,
+// });
+// // Apply rate limiter to all requests
+// app.use(limiter);
 
 // Set up mongoose connection
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 
 const dev_db_url =
-    "mongodb+srv://docAdmin:docPassword@cluster0.zaexh0d.mongodb.net/dobase?retryWrites=true&w=majority";
+    "mongodb+srv://docAdmin:docPassword@cluster0.zaexh0d.mongodb.net/doctrackbase1?retryWrites=true&w=majority";
 const mongoDB = process.env.MONGODB_URI || dev_db_url;
 
 main().catch((err) => console.log(err));
