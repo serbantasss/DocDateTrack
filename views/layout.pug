@@ -6,7 +6,7 @@ html(lang='en')
         meta(name='description', content='')
         meta(name='author', content='Mark Otto, Jacob Thornton, and Bootstrap contributors')
         meta(name='generator', content='Hugo 0.101.0')
-        title Starter Template &middot; Bootstrap v4.6
+        title #{title} &middot; DocTrack
         link(rel='canonical', href='https://getbootstrap.com/docs/4.6/examples/starter-template/')
         // Bootstrap core CSS
         link(href='/css/bootstrap.css', rel='stylesheet')
@@ -28,7 +28,7 @@ html(lang='en')
         link(href='/stylesheets/starter-template.css', rel='stylesheet')
     body
         nav.navbar.navbar-expand-md.navbar-dark.bg-dark.fixed-top
-            a.navbar-brand(href='#') Navbar
+            a.navbar-brand(href='#') DocTrack
             button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarsExampleDefault', aria-controls='navbarsExampleDefault', aria-expanded='false', aria-label='Toggle navigation')
                 span.navbar-toggler-icon
             #navbarsExampleDefault.collapse.navbar-collapse
@@ -37,19 +37,26 @@ html(lang='en')
                         a.nav-link(href='/')
                             | Home
                             span.sr-only (current)
-                    li(class='nav-item ' + ( currPage == "documents" ? "active" : ""))
-                        a.nav-link(href='/documents') Documents
-                    li.nav-item
-                        a.nav-link.disabled Disabled
-                    li.nav-item.dropdown
-                        a.nav-link.dropdown-toggle(href='#', data-toggle='dropdown', aria-expanded='false') Dropdown
+                    li(class= 'nav-item dropdown ' + (currPage == "documents" ? "active" : ""))
+                        a.nav-link.dropdown-toggle(href='#', data-toggle='dropdown', aria-expanded='false') Documents
                         .dropdown-menu
-                            a.dropdown-item(href='#') Action
-                            a.dropdown-item(href='#') Another action
-                            a.dropdown-item(href='#') Something else here
+                            a.dropdown-item(href='/documents') List All
+                            a.dropdown-item(href='/document/create') Create New
+                    li(class= 'nav-item dropdown ' + (currPage == "owners" ? "active" : ""))
+                        a.nav-link.dropdown-toggle(href='#', data-toggle='dropdown', aria-expanded='false') Owners
+                        .dropdown-menu
+                            a.dropdown-item(href='/owners') List All
+                            a.dropdown-item(href='/owner/create') Create New
+                    li(class= 'nav-item dropdown '+ ( currPage == "categories" ? "active" : ""))
+                        a.nav-link.dropdown-toggle(href='#', data-toggle='dropdown', aria-expanded='false') Categories
+                        .dropdown-menu
+                            a.dropdown-item(href='/categories') List All
+                            a.dropdown-item(href='/category/create') Create New
+                    li(class='nav-item ' + (currPage == "about" ? "active" : "") + ' disabled')
+                        a.nav-link(href='/') About
                 form.form-inline.my-2.my-lg-0
                     input.form-control.mr-sm-2(type='text', placeholder='Search', aria-label='Search')
-                    button.btn.btn-secondary.my-2.my-sm-0(type='submit') Search
+                    button.btn.btn-secondary.my-2.my-sm-0(type='submit' disabled) Search
         block content
         // /.container
         script(src='https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js', integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj', crossorigin='anonymous')

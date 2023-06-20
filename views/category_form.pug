@@ -1,0 +1,26 @@
+extends layout
+
+block content
+    main.container(role='main')
+        .starter-template
+            h1= title
+
+            form(method='POST' action='')
+
+                div.form-group
+                    label(for='name') Name:
+                    input#name.form-control(type='text', placeholder='' name='name' required='true' value=(undefined === category ? '' : category.name) )
+                
+                div.form-group
+                    label(for='relation') Relation:
+                    select#relation.form-control(type='select', placeholder='Select relation' name='relation')
+                        option(value='Personal' selected=(undefined === category || category.relation != 'Personal' ? false : 'selected')) Personal
+                        option(value='Munca' selected=(undefined === category || category.relation != 'Munca' ? false : 'selected')) Munca
+                        option(value='Altele' selected=(undefined === category || category.relation != 'Altele' ? false : 'selected')) Altele
+
+                button.btn.btn-primary(type='submit') Submit
+
+            if errors
+                ul
+                    for error in errors
+                        li!= error.msg

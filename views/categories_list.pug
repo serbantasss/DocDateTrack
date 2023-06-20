@@ -1,0 +1,14 @@
+extends layout
+
+block content
+    main.container(role='main')
+        .starter-template
+            h1= title
+
+            ul
+                each cat in category_list
+                    li
+                        #{cat.name}
+                        |  (#{cat.relation})
+                else
+                    li There are no categories.
