@@ -10,13 +10,12 @@ block content
                 div.form-group
                     label(for='name') Name:
                     input#name.form-control(type='text', placeholder='' name='name' required='true' value=(undefined === category ? '' : category.name) )
-                
+
                 div.form-group
-                    label(for='relation') Relation:
-                    select#relation.form-control(type='select', placeholder='Select relation' name='relation')
-                        option(value='Personal' selected=(undefined === category || category.relation != 'Personal' ? false : 'selected')) Personal
-                        option(value='Munca' selected=(undefined === category || category.relation != 'Munca' ? false : 'selected')) Munca
-                        option(value='Altele' selected=(undefined === category || category.relation != 'Altele' ? false : 'selected')) Altele
+                    label(for='rel') Relation:
+                    select#rel.form-control(type='select', placeholder='Select relation' name='rel')
+                        for rel in relations
+                            option(value='#{rel}' selected=((undefined === category || category.relation != '#{rel}') ? false : 'selected' )) #{rel}
 
                 button.btn.btn-primary(type='submit') Submit
 
