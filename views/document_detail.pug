@@ -1,0 +1,43 @@
+extends layout
+
+block content
+    main.container(role='main')
+        .starter-template
+
+            h1.mt-3= title
+            p
+                | Document ID: #{document._id}
+            p
+                | Document Owner: #{owner.name}
+            p
+                | Document Category: #{category.name}
+
+            h2 Owner Details
+            p
+                | Owner ID: #{owner._id}
+            p
+                | Owner Name: #{owner.name}
+
+            h2 Category Details
+            p
+                | Category ID: #{category._id}
+            p
+                | Category Name: #{category.name}
+
+            // Display instances details
+            h2 Instances of Document
+            ul.list-group.mb-2
+                each instance in instances
+                    p
+                    | Instance ID: #{instance._id}
+                    li.list-group-item &middot; #{instance._id}
+                    li.list-group-item &middot; #{instance._id}
+                    a.list-group-item(href='#', aria-current='true')
+                        .d-flex.w-100.justify-content-between
+                            h5.mb-1 Instance ID: #{instance._id}
+                            small #{testFunc(instance)} days ago
+                            
+                        p.mb-1 Expire Date: #{instance.expire_date}
+                        small And some small print.
+
+

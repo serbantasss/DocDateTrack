@@ -1,0 +1,17 @@
+extends layout
+
+block content
+    main.container(role='main')
+        .starter-template
+            h1.mt-3.mb-3= title
+
+            if owners_list.length > 0
+                    each owner in owners_list
+                        ul.list-group.mb-2
+                            a.list-group-item.list-group-item-primary(href=`/category/${owner._id}`)= owner.name
+                            li.list-group-item &middot; #{owner.phone}
+                            li.list-group-item &middot; #{owner.email}
+
+
+            else
+                p There are no owners.

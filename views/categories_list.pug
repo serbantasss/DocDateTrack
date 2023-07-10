@@ -3,12 +3,13 @@ extends layout
 block content
     main.container(role='main')
         .starter-template
-            h1= title
+            h1.mt-3.mb-3= title
 
-            ul
-                each cat in category_list
-                    li
-                        #{cat.name}
-                        |  (#{cat.relation})
-                else
-                    li There are no categories.
+            if category_list.length > 0
+                    each category in category_list
+                        ul.list-group.mb-2
+                            a.list-group-item.list-group-item-primary(href=`/category/${category._id}`) Categorie: #{category.name}
+                            li.list-group-item Tip: #{category.relation}
+
+            else
+                p There are no categories.

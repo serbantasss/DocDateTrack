@@ -1,0 +1,33 @@
+extends layout
+
+block content
+    main.container(role='main')
+        .starter-template
+            h1= title
+
+            form(method='POST' action='')
+
+
+                div.form-group
+                    label(for='first_name') First Name:
+                    input#first_name.form-control(type='text', placeholder='' name='first_name' required='true' value=(undefined === owner ? '' : owner.first_name) )
+
+                div.form-group
+                    label(for='last_name') Last Name:
+                    input#last_name.form-control(type='text', placeholder='' name='last_name' required='true' value=(undefined === owner ? '' : owner.last_name) )
+
+                div.form-group
+                    label(for='email') Email:
+                    input#email.form-control(type='email', placeholder='' name='email' value=(undefined === owner ? '' : owner.email) )
+
+                div.form-group
+                    label(for='phone') Phone Numer:
+                    input#phone.form-control(type='tel', placeholder='' name='phone'  value=(undefined === owner ? '' : owner.phone) )
+
+
+                button.btn.btn-primary(type='submit') Submit
+
+            if errors
+                ul
+                    for error in errors
+                        li!= error.msg

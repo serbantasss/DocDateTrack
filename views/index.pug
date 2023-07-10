@@ -1,12 +1,38 @@
 extends layout
 
 block content
-    main.container(role='main')
-        .starter-template
-            h1 Bootstrap starter template
-            p.lead
-                | Use this document as a way to quickly start any new project.
-                br
-                |  All you get is this text and a mostly barebones HTML document.
+    .p-3.pb-md-4.mx-auto.text-center
+        h1.display-4.fw-normal
+            | Bine ai venit la DocTrack al Pandora Medical!
+        p.fs-5.text-muted
+            | Alege dintre cele 3 tipuri de documente DPF (documente personal firma), DF (documentele firmei), si DP (documentele tale personale) folosind cele 3 butoane de mai jos! Dupa vei fi redirectionat catre paginile corespunzatoare.
+    .row.row-cols-1.row-cols-md-3.mb-3.text-center
+        .col
+            .card.mb-4.rounded-3.shadow-sm
+                .card-header.py-3
+                    h4.my-0.fw-normal Documente Personal Firma
+                .card-body
+                    a.w-100.btn.btn-lg.btn-primary(href='/documents/DPF', type='button') View DPF
+        .col
+            .card.mb-4.rounded-3.shadow-sm
+                .card-header.py-3
+                    h4.my-0.fw-normal Documente Firma
+                .card-body
+                    a.w-100.btn.btn-lg.btn-primary(href='/documents/DF', type='button') View DF
+        .col
+            .card.mb-4.rounded-3.shadow-sm.border-primary
+                .card-header.py-3.text-bg-primary.border-primary
+                    h4.my-0.fw-normal Documente Personale
+                .card-body
+                    a.w-100.btn.btn-lg.btn-outline-primary(href='/documents/DP', type='button') View DP
+
+    //h1.mt-5 Sticky footer with fixed navbar
+    //    p.lead
+    //        | Pin a footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS. A fixed navbar has been added with
+    //        code.small padding-top: 60px;
+    //        |  on the
+    //        code.small main &gt; .container
+    //        | .
+
 
 

@@ -1,0 +1,29 @@
+extends layout
+
+block content
+    main.container(role='main')
+        .starter-template
+
+            h1.mt-3= title
+            .row
+                .col-4
+                    #list-tab-owner.list-group(role='tablist')
+                        each owner, index in owners_list
+                            a.list-group-item.list-group-item-action(data-bs-toggle='list', href=`#list-${owner.last_name}-${index}`, role='tab')= owner.name
+                .col-8
+                    .tab-content
+                        each owner,index  in owners_list
+                            .tab-pane.fade(id= `list-${owner.last_name}-${index}`, role='tabpanel', aria-labelledby= `list-${owner.last_name}-${index}-list`)
+                                .list-group
+                                    each category in categories_list
+                                        li.list-group-item
+                                            | #{category.name}
+                                            button.btn.btn-success.ms-4.float-end(type='submit', form=`form-${owner._id}-${category._id}`) View
+                                            form(id=`form-${owner._id}-${category._id}`,action='', method="POST")
+                                                input(type="hidden", name="ownerId", value=owner._id)
+                                                input(type="hidden", name="categoryId", value=category._id)
+
+
+
+
+
