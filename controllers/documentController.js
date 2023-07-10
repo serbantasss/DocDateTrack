@@ -1,39 +1,58 @@
 const Document = require("../models/document");
 const Category = require("../models/category");
 const Owner = require("../models/owner");
+const DocumentInstace = require("../models/documentInstance");
 
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
-
-const multer = require('multer');
-const path = require('path');
-
-// Set up multer middleware to handle file uploads.
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ storage: storage });
+const {DateTime} = require("luxon");
 
 // Display list of all documents.
 exports.document_list = asyncHandler(async (req, res, next) => {
 
-    const allDocuments = await Document.find({})
-        .sort({ expire_date_raw: 1})
-        .exec();
+    const allDocuments = await Document.find().populate("owner").populate("category").exec();
+    const allOwners = await Owner.find().exec();
+    const allCategories = await Category.find({relation: req.params.relation}).exec();
 
-    res.render("document_list", { title: "Document List", currPage: "documents" ,doclist: allDocuments });
+    res.render("document_list", {
+        title: "Document List" + `${req.params.relation}`,
+        currPage: "documents" ,
+        document_list: allDocuments,
+        owners_list: allOwners,
+        categories_list: allCategories,
+    });
 });
 
-// // Display detail page for a specific document.
-// exports.document_detail = asyncHandler(async (req, res, next) => {
-//     res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
-// });
+// Display detail page for a specific document.
+exports.document_detail = asyncHandler(async (req, res, next) => {
+
+    const document = await Document.findById(req.params.id)
+        .populate("owner")
+        .populate("category")
+        .exec();
+
+    if (!document) {
+        const error = new Error("Document not found");
+        error.status = 404;
+        throw error;
+    }
+
+    const owner = document.owner;
+    const category = document.category;
+
+    const instances = await DocumentInstace.find({ owner, category }).exec();
+    const currentDate = DateTime.local();
+    res.render("document_detail", {
+        title: "Document Detail",
+        document,
+        owner,
+        category,
+        instances,
+        time_ago: function(instance){
+            return DateTime.fromJSDate(instance.expire_date_raw).toRelativeCalendar();
+        },
+    });
+});
 
 // Display document create form on GET.
 exports.document_create_get = asyncHandler(async (req, res, next) => {
@@ -63,29 +82,12 @@ exports.document_create_post = [
         .isLength({ min: 1 })
         .escape()
         .withMessage("Category must be specified."),
-    body("status")
-        .escape(),
-    body("expire_date_raw", "Invalid expiry date")
-        .optional({values: "falsy"})
-        .isISO8601()
-        .toDate(),
-    body("document_file")
-        .custom((value, { req }) => {
-            if (!req.file) {
-                throw new Error('Document file is required.');
-            }
-            return true;
-        }),
-    asyncHandler(upload.single("document_file"), async (req, res, next) => {
+    asyncHandler(async (req, res, next) => {
         // Check for validation errors.
         const errors = validationResult(req);
         const new_document = new Document({
             owner: req.body.owner,
             category: req.body.category,
-            status: req.body.status,
-            expire_date_raw: req.body.expride_date_raw,
-            update_date_raw: Date.now,
-            document_file: req.body.document_file,
         });
         if (!errors.isEmpty()) {
             // There are validation errors. Render the form again with sanitized values/error messages.
@@ -107,8 +109,6 @@ exports.document_create_post = [
                 owner: req.body.owner,
                 category: req.body.category,
                 status: req.body.status,
-                expire_date: req.body.expire_date_raw,
-                document_file: req.file.path,
             });
             await document.save();
             res.redirect("/");
@@ -148,7 +148,7 @@ exports.document_update_post = [
         .optional({ nullable: true })
         .isISO8601()
         .toDate(),
-    asyncHandler(upload.single('document_file'), async (req, res, next) => {
+    asyncHandler( async (req, res, next) => {
         res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
     }),
 ];

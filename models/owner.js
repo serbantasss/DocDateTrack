@@ -14,6 +14,11 @@ OwnerSchema.virtual("name").get(function () {
     return `${this.last_name} ${this.first_name}`;
 });
 
+// Virtual for author's full name
+OwnerSchema.virtual("sid").get(function () {
+    return `${this.last_name}${this.first_name}`;
+});
+
 // Virtual for author's URL
 OwnerSchema.virtual("url").get(function () {
     return `/owner/${this._id}`;

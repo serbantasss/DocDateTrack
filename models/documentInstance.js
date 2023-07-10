@@ -6,11 +6,7 @@ const DocumentInstanceSchema = new Schema({
     document: { type: Schema.Types.ObjectId, ref: "Document", required: true },
     expire_date_raw: { type: Date, required: true},
     update_date_raw: { type: Date, default: Date.now },
-    document_file:{
-        data: Buffer,
-        contentType: String,
-        required: true
-    },
+    document_file:{ type: String, required: true },
 });
 
 // Virtual for document's URL
@@ -24,7 +20,7 @@ DocumentInstanceSchema.virtual("expire_date").get(function(){
 })
 
 //Virtual for formatted update date
-DocumentSchema.virtual("update_date").get(function(){
+DocumentInstanceSchema.virtual("update_date").get(function(){
     return DateTime.fromJSDate(this.update_date_raw).toLocaleString(DateTime.DATE_MED);
 })
 

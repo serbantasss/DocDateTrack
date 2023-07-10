@@ -4,14 +4,19 @@ const { body, validationResult } = require('express-validator');
 const asyncHandler = require("express-async-handler");
 
 // Display list of all owners.
-exports.owner_list = asyncHandler(async (req, res, next) => {
+exports.owners_list = asyncHandler(async (req, res, next) => {
     //res.send("NOT IMPLEMENTED: Owner list");
 
     const allOwners = await Owner
         .find()
         .sort({ last_name: 'asc' })
         .exec();
-    res.render("owner_list",{ title: "Owner List", owner_list: allOwners });
+    res.render("owners_list",{ title: "Owner List", owners_list: allOwners });
+});
+
+// Display detail page for a specific document instance.
+exports.owner_detail = asyncHandler(async (req, res, next) => {
+    res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
 });
 
 // Display owner create form on GET.
@@ -29,7 +34,7 @@ exports.owner_create_post = [
         .withMessage("First name must be specified.")
         .isAlphanumeric()
         .withMessage("First name has non-alphanumeric characters."),
-    body("family_name")
+    body("last_name")
         .trim()
         .isLength({ min: 1 })
         .escape()

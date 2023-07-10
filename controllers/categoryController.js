@@ -1,6 +1,6 @@
 const Category = require("../models/category");
 const Document = require("../models/document");
-
+const Owner = require("../models/owner");
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
 
@@ -9,13 +9,16 @@ exports.category_list = asyncHandler(async (req, res, next) => {
 
     const allCategories = await Category.find().sort({ name: 1 }).exec();
 
-    res.render("category_list",{
+    res.render("categories_list",{
         title: "Category List",
         category_list: allCategories,
         currPage: "category",
-    })
+    });
 });
-
+// Display detail page for a specific document instance.
+exports.category_detail = asyncHandler(async (req, res, next) => {
+    res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
+});
 // // Display detail page for a specific category.
 // exports.category_detail = asyncHandler(async (req, res, next) => {
 //     //res.send(`NOT IMPLEMENTED: category detail: ${req.params.id}`);
@@ -39,7 +42,8 @@ exports.category_list = asyncHandler(async (req, res, next) => {
 exports.category_create_get = (req, res, next) => {
     res.render("category_form",{
         title: "Create new Category",
-        currPage: 'categories'
+        relations: Category.schema.path('relation').enumValues,
+        currPage: 'categories',
     });
 };
 
@@ -49,9 +53,7 @@ exports.category_create_post = [
         .trim()
         .isLength({ min: 1 })
         .escape()
-        .withMessage("First name must be specified.")
-        .isAlphanumeric()
-        .withMessage("First name has non-alphanumeric characters."),
+        .withMessage("First name must be specified."),
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
         const new_category = new Category({
@@ -62,6 +64,7 @@ exports.category_create_post = [
             res.render("category_form",{
                 title: "Create new Category",
                 category: new_category,
+                relations: Category.schema.path('relation').enumValues,
                 errors: errors,
             });
         } else {
@@ -69,12 +72,12 @@ exports.category_create_post = [
             // Check if category with same name already exists.
             const categoryExists = await Category.findOne({ name: req.body.name }).exec();
             if (categoryExists) {
-                // Genre exists, redirect to categories list.
-                res.redirect("/categories");
+                // Category exists, redirect to categories list.
+                res.redirect(categoryExists.url);
             } else {
                 await new_category.save();
-                // New genre saved. Redirect to categories list.
-                res.redirect("/categories");
+                // New category saved. Redirect to categories list.
+                res.redirect("/");
             }
         }
     }),
@@ -158,3 +161,15 @@ exports.category_update_post = [
         }
     }),
 ];
+
+//List categories based on relation
+
+exports.category_list_index = asyncHandler(async (req, res, next) => {
+    const allCategories = await Category.find({relation: req.params.relation.toUpperCase()}).sort({ name: 1 }).exec();
+
+    res.render("categories_list",{
+        title: "Category List",
+        category_list: allCategories,
+        currPage: "category",
+    });
+});

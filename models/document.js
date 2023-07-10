@@ -8,7 +8,6 @@ const DocumentSchema = new Schema({
     status: {
         type: String,
         enum: ["Updated", "Expired", "Update Soon"],
-        default: "Updated",
     },
 });
 
