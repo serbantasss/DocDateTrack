@@ -144,6 +144,7 @@ router.get("/document_instances", document_instance_controller.document_instance
 /**
  * EXTRA ROUTES
  */
+//main listing routes
 router.get("/documents/:relation", asyncHandler(async (req, res, next) => {
 
   const allDocuments = await Document.find().populate("owner").populate("category").exec();
@@ -172,6 +173,11 @@ router.post("/documents/:relation", asyncHandler(async (req, res, next) => {
 
   res.redirect(document.url);
 
+}));
+
+//download instance routes
+router.get("/download/:id", asyncHandler(async (req, res, next) => {
+  res.download(`./uploads/${req.params.id}`);
 }));
 
 module.exports = router;

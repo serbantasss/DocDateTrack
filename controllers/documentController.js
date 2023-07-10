@@ -1,7 +1,7 @@
 const Document = require("../models/document");
 const Category = require("../models/category");
 const Owner = require("../models/owner");
-const DocumentInstace = require("../models/documentInstance");
+const DocumentInstance = require("../models/documentInstance");
 
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
@@ -40,16 +40,21 @@ exports.document_detail = asyncHandler(async (req, res, next) => {
     const owner = document.owner;
     const category = document.category;
 
-    const instances = await DocumentInstace.find({ owner, category }).exec();
-    const currentDate = DateTime.local();
+    const instances = await DocumentInstance.find({document: document}).exec();
+
+    const currentDate = DateTime.now();
+
     res.render("document_detail", {
         title: "Document Detail",
         document,
         owner,
         category,
         instances,
-        time_ago: function(instance){
-            return DateTime.fromJSDate(instance.expire_date_raw).toRelativeCalendar();
+        daysDifference: function(raw_date){
+            return parseInt(currentDate.diff(DateTime.fromJSDate(raw_date), "days").days);
+        },
+        time_ago: function(raw_date){
+            return DateTime.fromJSDate(raw_date).toRelativeCalendar();
         },
     });
 });

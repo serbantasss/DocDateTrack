@@ -28,16 +28,30 @@ block content
             h2 Instances of Document
             ul.list-group.mb-2
                 each instance in instances
-                    p
-                    | Instance ID: #{instance._id}
-                    li.list-group-item &middot; #{instance._id}
-                    li.list-group-item &middot; #{instance._id}
-                    a.list-group-item(href='#', aria-current='true')
-                        .d-flex.w-100.justify-content-between
-                            h5.mb-1 Instance ID: #{instance._id}
-                            small #{testFunc(instance)} days ago
-                            
-                        p.mb-1 Expire Date: #{instance.expire_date}
-                        small And some small print.
+                    if daysDifference(instance.expire_date_raw) > 0
+                        a.list-group-item.list-group-item-danger(href='#', aria-current='true')
+                            .d-flex.w-100.justify-content-between
+                                h5.mb-1 Instance ID: #{instance.document_file}
+                                small #{time_ago(instance.update_date_raw)}
 
+                            //p.mb-1 Expire Date: #{daysDifference(instance.expire_date_raw)}
+                            small Expires #{time_ago(instance.expire_date_raw)}
+                    else if daysDifference(instance.expire_date_raw) > -30
+                        a.list-group-item.list-group-item-warning(href='#', aria-current='true')
+                            .d-flex.w-100.justify-content-between
+                                h5.mb-1 Instance ID: #{instance.document_file}
+                                small #{time_ago(instance.update_date_raw)}
+
+                            //p.mb-1 Expire Date: #{daysDifference(instance.expire_date_raw)}
+                            small Expires #{time_ago(instance.expire_date_raw)}
+                    else
+                        a.list-group-item.list-group-item-success(href=`/download/${instance.document_file}`, aria-current='true')
+                            .d-flex.w-100.justify-content-between
+                                h5.mb-1 Instance ID: #{instance.document_file}
+                                small #{time_ago(instance.update_date_raw)}
+
+                            //p.mb-1 Expire Date: #{daysDifference(instance.expire_date_raw)}
+                            small Expires #{time_ago(instance.expire_date_raw)}
+                else
+                    p No instances found.
 
