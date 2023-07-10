@@ -75,5 +75,14 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+//script to send emails
+const cron = require('node-cron');
+const performDBCheck = require('./test_email_notification');
+// Schedule the script to run every hour (change the cron schedule as per your requirement)
+cron.schedule("0 * * * *", () => {
+    //performDBCheck();
+    console.log("DB Check");
+});
+
 
 module.exports = app;
