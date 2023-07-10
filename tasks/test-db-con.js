@@ -1,6 +1,6 @@
-const Owner = require("./models/owner");
-const Category = require("./models/category");
-const Document = require("./models/document");
+const Owner = require("../models/owner");
+const Category = require("../models/category");
+const Document = require("../models/document");
 
 // Set up mongoose connection
 const mongoose = require("mongoose");

@@ -1,5 +1,5 @@
-const Document = require("./models/document");
-const DocumentInstance = require("./models/documentInstance");
+const Document = require("../models/document");
+const DocumentInstance = require("../models/documentInstance");
 const { DateTime } = require("luxon");
 
 // Define the function that performs the checks
@@ -10,13 +10,12 @@ async function dbCheck() {
 
         // Iterate through each document
         for (const document of documents) {
-            // Fetch the document instances for the current document
-            const documentInstances = await DocumentInstance.find({
+            // Fetch the last document instance for the current document
+
+            const last_instance = await DocumentInstance.findOne({
                 document: document._id,
             }).sort({expire_date_raw: 1});
-
-            const firstDoucmentInstance = documentInstaces[0];
-            const expireDate = DateTime.fromJSDate(firstDoucmentInstance.expire_date_raw);
+            const expireDate = DateTime.fromJSDate(last_instance.expire_date_raw);
 
             const currentDate = DateTime.now();
             const daysDifference = expireDate.diff(currentDate, "days").days;
@@ -43,24 +42,4 @@ async function dbCheck() {
     }
 }
 
-// Function to send emails for expired documents
-async function sendEmailsForExpiredDocuments() {
-    try {
-        // Fetch all documents with status "Expired"
-        const expiredDocuments = await Document.find({ status: "Expired" });
-
-        // Iterate through each expired document and send an email
-        for (const document of expiredDocuments) {
-            // Send email logic goes here
-            console.log(`Sending email for expired document: ${document._id}`);
-        }
-
-        console.log("Emails sent for expired documents.");
-    } catch (error) {
-        console.error("Error sending emails for expired documents:", error);
-    }
-}
-
-
-// Export the function to be used in other files if needed
 module.exports = dbCheck;

@@ -17,6 +17,11 @@ block content
                 | Owner ID: #{owner._id}
             p
                 | Owner Name: #{owner.name}
+            p
+                | Owner Email:&nbsp;
+                a(href='/') #{owner.email}
+            p
+                | Owner Phone: #{owner.phone}
 
             h2 Category Details
             p
@@ -28,30 +33,21 @@ block content
             h2 Instances of Document
             ul.list-group.mb-2
                 each instance in instances
-                    if daysDifference(instance.expire_date_raw) > 0
-                        a.list-group-item.list-group-item-danger(href='#', aria-current='true')
-                            .d-flex.w-100.justify-content-between
-                                h5.mb-1 Instance ID: #{instance.document_file}
-                                small #{time_ago(instance.update_date_raw)}
+                    - let cl = ''
+                    - let daysDiff = daysDifference(instance.expire_date_raw)
+                    - if (daysDiff > 0)
+                    -    cl = 'list-group-item-danger'
+                    - if (daysDiff > -30 && daysDiff <= 0)
+                    -    cl = 'list-group-item-warning'
+                    - if (daysDiff <= -30)
+                    -   cl = 'list-group-item-success'
+                    a.list-group-item(class= cl href=`/download/${instance.document_file}`, aria-current='true')
+                        .d-flex.w-100.justify-content-between
+                            h5.mb-1 Instance ID: #{instance.document_file}
+                            small #{time_ago(instance.update_date_raw)}
+                        small Expires #{time_ago(instance.expire_date_raw)}
 
-                            //p.mb-1 Expire Date: #{daysDifference(instance.expire_date_raw)}
-                            small Expires #{time_ago(instance.expire_date_raw)}
-                    else if daysDifference(instance.expire_date_raw) > -30
-                        a.list-group-item.list-group-item-warning(href='#', aria-current='true')
-                            .d-flex.w-100.justify-content-between
-                                h5.mb-1 Instance ID: #{instance.document_file}
-                                small #{time_ago(instance.update_date_raw)}
 
-                            //p.mb-1 Expire Date: #{daysDifference(instance.expire_date_raw)}
-                            small Expires #{time_ago(instance.expire_date_raw)}
-                    else
-                        a.list-group-item.list-group-item-success(href=`/download/${instance.document_file}`, aria-current='true')
-                            .d-flex.w-100.justify-content-between
-                                h5.mb-1 Instance ID: #{instance.document_file}
-                                small #{time_ago(instance.update_date_raw)}
-
-                            //p.mb-1 Expire Date: #{daysDifference(instance.expire_date_raw)}
-                            small Expires #{time_ago(instance.expire_date_raw)}
                 else
                     p No instances found.
 
