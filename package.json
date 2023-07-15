@@ -19,6 +19,7 @@
     "helmet": "^7.0.0",
     "http-errors": "~1.6.3",
     "luxon": "^3.3.0",
+    "method-override": "^3.0.0",
     "mongodb": "^5.6.0",
     "mongoose": "^7.2.4",
     "morgan": "~1.9.1",
@@ -28,6 +29,6 @@
     "pug": "^3.0.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.0.1"
   }
 }
