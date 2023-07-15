@@ -1,14 +1,13 @@
 const Category = require("../models/category");
 const Document = require("../models/document");
 const Owner = require("../models/owner");
+
 const { body, validationResult } = require("express-validator");
 const asyncHandler = require("express-async-handler");
 
 // Display list of all categories.
 exports.category_list = asyncHandler(async (req, res, next) => {
-
     const allCategories = await Category.find().sort({ name: 1 }).exec();
-
     res.render("categories_list",{
         title: "Category List",
         category_list: allCategories,
@@ -51,7 +50,7 @@ exports.category_create_get = (req, res, next) => {
 exports.category_create_post = [
     body("name")
         .trim()
-        .isLength({ min: 1 })
+        .isLength({ min: 3 })
         .escape()
         .withMessage("First name must be specified."),
     asyncHandler(async (req, res, next) => {
@@ -65,7 +64,7 @@ exports.category_create_post = [
                 title: "Create new Category",
                 category: new_category,
                 relations: Category.schema.path('relation').enumValues,
-                errors: errors,
+                errors: errors.array(),
             });
         } else {
             // Data from form is valid.
@@ -77,7 +76,7 @@ exports.category_create_post = [
             } else {
                 await new_category.save();
                 // New category saved. Redirect to categories list.
-                res.redirect("/");
+                res.redirect("/categories");
             }
         }
     }),
