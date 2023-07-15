@@ -45,7 +45,12 @@ block content
                         .d-flex.w-100.justify-content-between
                             h5.mb-1 Instance ID: #{instance.document_file}
                             small #{time_ago(instance.update_date_raw)}
-                        small Expires #{time_ago(instance.expire_date_raw)}
+                        if cl === 'list-group-item-danger'
+                            small Expired!
+                        else if cl === 'list-group-item-warning'
+                            small Expires #{time_ago(instance.expire_date_raw)}. Please Update!
+                        else
+                            small Expires #{time_ago(instance.expire_date_raw)}.
 
 
                 else

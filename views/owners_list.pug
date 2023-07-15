@@ -1,17 +1,19 @@
 extends layout
 
 block content
-    main.container(role='main')
-        .starter-template
-            h1.mt-3.mb-3= title
-
-            if owners_list.length > 0
-                    each owner in owners_list
-                        ul.list-group.mb-2
-                            a.list-group-item.list-group-item-primary(href=`/category/${owner._id}`)= owner.name
-                            li.list-group-item &middot; #{owner.phone}
-                            li.list-group-item &middot; #{owner.email}
-
-
-            else
-                p There are no owners.
+    h1.mt-3.mb-3= title
+    if owners_list.length > 0
+        each owner in owners_list
+            ul.list-group.mb-2.col-4
+                li.list-group-item.list-group-item-primary.d-flex
+                    a.text-decoration-none.flex-fill.align-self-center(href=`/owner/${owner._id}`) #{owner.name}
+                    form.align-self-center(method='POST', action=`/delete/owner/${owner._id}?_method=DELETE`)
+                        button.btn.btn-link(type='submit')
+                            i.bi.bi-trash3
+                    form.align-self-center(method='POST', action=`/update/owner/${owner._id}?_method=UPDATE`)
+                        button.btn.btn-link(type='submit')
+                            i.bi.bi-pencil-square
+                li.list-group-item &middot; #{owner.phone}
+                li.list-group-item &middot; #{owner.email}
+    else
+        p There are no owners.

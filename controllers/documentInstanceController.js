@@ -23,6 +23,7 @@ const storage = multer.diskStorage({
         cb(null, `${name}-${Date.now()}.${ext}`);
     }
 });
+
 // Multer Filter
 const multerFilter = (req, file, cb) => {
     if (file.mimetype.split("/")[1] === "pdf") {
@@ -34,7 +35,6 @@ const multerFilter = (req, file, cb) => {
 
 const upload = multer({
     storage: storage,
-    fileFilter: multerFilter,
 });
 
 // Display list of all documents.
@@ -83,10 +83,9 @@ exports.document_instance_create_post =[
         const new_document_instance = new DocumentInstance({
             document: selected_document,
             expire_date_raw: req.body.expire_date_raw,
-            update_date_raw: Date.now(),
+            update_date_raw: req.body.update_date_raw || Date.now(),
             document_file: req.file.filename,
         });
-
         if (!errors.isEmpty()) {
             // There are validation errors. Render the form again with sanitized values/error messages.
             //Get all owners and categories, which we can add to our document
@@ -101,7 +100,7 @@ exports.document_instance_create_post =[
         } else {
             // No validation errors. Create the document.
             await new_document_instance.save();
-            res.redirect("/");
+            res.redirect(selected_document.url);
         }
     }),
 ];

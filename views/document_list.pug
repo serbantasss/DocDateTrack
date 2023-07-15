@@ -5,31 +5,29 @@ block content
         .starter-template
 
             h1.mt-3= title
-
-            if document_list.length > 0
-                ul.list-group
-                    each document, index in document_list
-                        if index%7 === 0
-                            li.list-group-item.col-4.list-group-item-dark
-                                a(href=`/document/${document._id}`) #{document.category.name}
-                                | &nbsp; al &nbsp;
-                                a(href=`/document/${document._id}`) #{document.owner.name}
-                                a.btn.btn-success.ms-4.float-end(href=`/document/${document._id}`, role='button') View
+            .row
+                .col-4
+                    #list-tab-owner.list-group(role='tablist')
+                        each owner, index in owners_list
+                            a.list-group-item.list-group-item-action(data-bs-toggle='list', href=`#list-${owner.last_name}-${index}`, role='tab')= owner.name
                         else
-                            li.list-group-item.col-4
-                                a(href=`/document/${document._id}`) #{document.category.name}
-                                | &nbsp; al &nbsp;
-                                a(href=`/document/${document._id}`) #{document.owner.name}
-                                a.btn.btn-success.ms-4.float-end(href=`/document/${document._id}`, role='button') View
+                            | No owners found.
+                .col-8
+                    .tab-content
+                        each owner,index  in owners_list
+                            .tab-pane.fade(id= `list-${owner.last_name}-${index}`, role='tabpanel', aria-labelledby= `list-${owner.last_name}-${index}-list`)
+                                .list-group
+                                    each category in categories_list
+                                        li.list-group-item
+                                            | #{category.name}
+                                            button.btn.btn-success.ms-4.float-end(type='submit', form=`form-${owner._id}-${category._id}`) View
+                                            form(id=`form-${owner._id}-${category._id}`,action='', method="POST")
+                                                input(type="hidden", name="ownerId", value=owner._id)
+                                                input(type="hidden", name="categoryId", value=category._id)
+                                    else
+                                        | No documents found.
 
-                            if index%7 === 6
-                                br
-
-                        //a.list-group-item.list-group-item-primary(href=`/owner/${document.owner._id}`) "&middot; #{document.owner.name}
-                        //a.list-group-item.list-group-item-primary(href=`/category/${document.category._id}`) &middot; #{document.category}
-                        //if document.status == "Updated"
 
 
 
-            else
-                p There are no owners.
+

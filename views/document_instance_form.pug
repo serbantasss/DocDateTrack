@@ -19,6 +19,10 @@ block content
                             option(value=owner._id ) #{owner.name}
 
                 div.form-group.mt-2
+                    label(for='update_date_raw') Update Date:
+                    input#update_date_raw.form-control(type='date' name='update_date_raw')
+
+                div.form-group.mt-2
                     label(for='expire_date_raw') Expire Date:
                     input#expire_date_raw.form-control(type='date' name='expire_date_raw')
 

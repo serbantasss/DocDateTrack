@@ -10,17 +10,34 @@ const {DateTime} = require("luxon");
 // Display list of all documents.
 exports.document_list = asyncHandler(async (req, res, next) => {
 
+    const relation = req.params.relation;
+
     const allDocuments = await Document.find().populate("owner").populate("category").exec();
     const allOwners = await Owner.find().exec();
-    const allCategories = await Category.find({relation: req.params.relation}).exec();
+    const allCategories = relation ? await Category.find({relation: relation}).exec() : await Category.find().exec();
 
     res.render("document_list", {
-        title: "Document List" + `${req.params.relation}`,
+        title: "Document List" + (relation || ""),
         currPage: "documents" ,
         document_list: allDocuments,
         owners_list: allOwners,
         categories_list: allCategories,
     });
+});
+
+//Redirect to selected document page.
+exports.document_list_redirect = asyncHandler(async (req, res, next) => {
+
+    const owner = await Owner.findById(req.body.ownerId).exec();
+    const category = await Category.findById(req.body.categoryId).exec();
+
+    const document = await Document.findOne({
+        category: category,
+        owner: owner,
+    }).exec();
+    // Process the request submission
+
+    res.redirect(document.url);
 });
 
 // Display detail page for a specific document.
@@ -120,6 +137,10 @@ exports.document_create_post = [
         }
     }),
 ];
+
+
+
+
 
 // Display document delete form on GET.
 exports.document_delete_get = asyncHandler(async (req, res, next) => {

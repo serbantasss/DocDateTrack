@@ -1,5 +1,7 @@
 const Owner = require("../models/owner");
-const Document = require("../models/document")
+const Document = require("../models/document");
+const DocumentInstance = require("../models/documentInstance");
+
 const { body, validationResult } = require('express-validator');
 const asyncHandler = require("express-async-handler");
 
@@ -79,43 +81,36 @@ exports.owner_create_post = [
     }),
 ];
 
-// Display owner delete form on GET.
-exports.owner_delete_get = asyncHandler(async (req, res, next) => {
-    //res.send("NOT IMPLEMENTED: owner delete GET");
-    const [owner, allDocumentsOfOwner] = await Promise.all([
-        Owner.findby(req.params.id).exec(),
-        Document.find({ owner: req.params.id })
-    ]);
+// Handle owner delete on DELETE.
+exports.owner_delete = asyncHandler(async (req, res, next) => {
+    const owner = await Owner.findById(req.params.id).exec();
     if (owner === null){
-        //no owner to delete
-        res.redirect("/owners");
+        //No result.
+        const err = new Error("Owner not found!");
+        console.log("Owner not found!");
+        err.status = 404;
+        return next(err);
     }
-    res.render("owner_delete",{
-        title: "Delete Owner",
-        owner: owner,
-        owner_documents: allDocumentsOfOwner,
-    });
-});
 
-// Handle owner delete on POST.
-exports.owner_delete_post = asyncHandler(async (req, res, next) => {
-    //res.send("NOT IMPLEMENTED: owner delete POST");
-    const [owner, allDocumentsOfOwner] = await Promise.all([
-        Owner.findById(req.params.id).exec(),
-        Document.find({ owner: req.params.id })
-    ]);
-    if (allDocumentsOfOwner.length > 0){
-        //Owner still has documents.
-        res.render("owner_delete",{
-            title: "Delete Owner",
-            owner: owner,
-            owner_documents: allDocumentsOfOwner,
-        });
-    } else {
-        //Owner has no documents in use.
-        await Owner.findByIdAndRemove(req.body.authorid);
-        res.redirect("/owners");
+    const documents_of_owner = await Document.find({owner: owner});
+
+    for(const doc of documents_of_owner){
+        //Removes all instances of doc
+        const instances = await DocumentInstance.find({document: doc}).exec();
+        for(const instance of instances){
+            //await DocumentInstance.findByIdAndDelete(instance._id).exec();
+            console.log("Removed instance with id " + instance._id);
+        }
+        console.log("Removed all instances of" + doc._id);
     }
+    //Now removes all documents of owner
+    //await Document.deleteMany({owner: owner}).exec();
+    console.log("Deleted all documents deleted of owner:" + req.params.id);
+    //Now removes owner
+    //await Owner.findByIdAndDelete(req.params.id).exec();
+    console.log("Deleted owner:" + req.params.id);
+
+    res.redirect("/owners");
 });
 
 // Display owner update form on GET.

@@ -66,6 +66,10 @@ router.get("/document/:id", document_controller.document_detail);
 //GET request for list of documents.
 router.get("/documents", document_controller.document_list);
 
+router.get("/documents/:relation", document_controller.document_list);
+
+router.post("/documents/:relation", document_controller.document_list_redirect);
+
 /**
   OWNER ROUTES.
  */
@@ -76,20 +80,14 @@ router.get("/owner/create", owner_controller.owner_create_get);
 //POST request to create owner.
 router.post("/owner/create", owner_controller.owner_create_post);
 
-//GET request to remove owner.
-router.get("/owner/:id/delete", owner_controller.owner_delete_get);
-
-//POST request to remove owner.
-router.post("/owner/:id/delete", owner_controller.owner_delete_post);
-
-//GET request to update owner.
-router.get("/owner/:id/update", owner_controller.owner_update_get);
-
-//POST request to update owner.
-router.post("/owner/:id/update", owner_controller.owner_update_post);
-
-//GET request for one document info.
+//GET request for specified owner information.
 router.get("/owner/:id", owner_controller.owner_detail);
+
+//DELETE request for specified owner.
+router.delete("/delete/owner/:id", owner_controller.owner_delete);
+
+//UPDATE request for specified owner.
+//router.update("/owner/:id", owner_controller.owner_delete);
 
 //GET request for list of owners.
 router.get("/owners", owner_controller.owners_list);
@@ -140,45 +138,16 @@ router.get("/document_instance/:id", document_instance_controller.document_insta
 //GET request for list of documents.
 router.get("/document_instances", document_instance_controller.document_instance_list);
 
+//GET request to download document instance file.
+router.get("/download/:id", asyncHandler(async (req, res, next) => {
+  res.download(`./uploads/${req.params.id}`);
+}));
 
 /**
  * EXTRA ROUTES
  */
-//main listing routes
-router.get("/documents/:relation", asyncHandler(async (req, res, next) => {
 
-  const allDocuments = await Document.find().populate("owner").populate("category").exec();
-  const allOwners = await Owner.find().exec();
-  const allCategories = await Category.find({relation: req.params.relation}).exec();
 
-  res.render("main_listing", {
-    title: "Document List " + `${req.params.relation}`,
-    currPage: "documents" ,
-    document_list: allDocuments,
-    owners_list: allOwners,
-    categories_list: allCategories,
-  });
-}));
-
-router.post("/documents/:relation", asyncHandler(async (req, res, next) => {
-
-  const owner = await Owner.findById(req.body.ownerId).exec();
-  const category = await Category.findById(req.body.categoryId).exec();
-
-  const document = await Document.findOne({
-    category: category,
-    owner: owner,
-  }).exec();
-  // Process the request submission
-
-  res.redirect(document.url);
-
-}));
-
-//download instance routes
-router.get("/download/:id", asyncHandler(async (req, res, next) => {
-  res.download(`./uploads/${req.params.id}`);
-}));
 
 
 module.exports = router;
