@@ -9,7 +9,8 @@ block content
                 .col-4
                     #list-tab-owner.list-group(role='tablist')
                         each owner, index in owners_list
-                            a.list-group-item.list-group-item-action(data-bs-toggle='list', href=`#list-${owner.last_name}-${index}`, role='tab')= owner.name
+                            a.list-group-item.list-group-item-action(data-bs-toggle='list', href=`#list-${owner.last_name}-${index}`, role='tab')
+                                .fs-5 #{owner.name}
                         else
                             | No owners found.
                 .col-8
@@ -18,12 +19,19 @@ block content
                             .tab-pane.fade(id= `list-${owner.last_name}-${index}`, role='tabpanel', aria-labelledby= `list-${owner.last_name}-${index}-list`)
                                 .list-group
                                     each category in categories_list
-                                        li.list-group-item
-                                            | #{category.name}
-                                            button.btn.btn-success.ms-4.float-end(type='submit', form=`form-${owner._id}-${category._id}`) View
-                                            form(id=`form-${owner._id}-${category._id}`,action='', method="POST")
-                                                input(type="hidden", name="ownerId", value=owner._id)
-                                                input(type="hidden", name="categoryId", value=category._id)
+                                        - let doc_id = current_doc_id(owner._id, category._id)
+                                        if doc_id
+                                            li.list-group-item.d-flex.flex-row.align-items-center
+                                                .fw-bold.fs-5 #{category.name}
+                                                a.btn.btn-success.ms-auto(href=`/document/${doc_id}`)
+                                                    | View
+                                                    i.bi.bi-eye-fill.ms-1
+                                                form.ms-3(method='POST', action=`/update/document/${doc_id}?_method=PUT`)
+                                                    button.btn.btn-warning(type='submit')
+                                                        i.bi.bi-pencil-square
+                                                form.ms-3(method='POST', action=`/delete/document/${doc_id}?_method=DELETE`)
+                                                    button.btn.btn-danger(type='submit')
+                                                        i.bi.bi-trash3
                                     else
                                         | No documents found.
 

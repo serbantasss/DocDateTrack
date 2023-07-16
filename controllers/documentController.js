@@ -6,38 +6,35 @@ const DocumentInstance = require("../models/documentInstance");
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 const {DateTime} = require("luxon");
+const {stringify} = require("nodemon/lib/utils");
 
 // Display list of all documents.
 exports.document_list = asyncHandler(async (req, res, next) => {
 
     const relation = req.params.relation;
 
-    const allDocuments = await Document.find().populate("owner").populate("category").exec();
+    const allDocuments = await Document.find().exec();
+    allDocuments.forEach((doc) => {
+        doc.owner = doc.owner.toString();
+        doc.category = doc.category.toString();
+    });
     const allOwners = await Owner.find().exec();
     const allCategories = relation ? await Category.find({relation: relation}).exec() : await Category.find().exec();
 
     res.render("document_list", {
         title: "Document List" + (relation || ""),
         currPage: "documents" ,
-        document_list: allDocuments,
         owners_list: allOwners,
         categories_list: allCategories,
+        current_doc_id: function(owner_id, category_id){
+            for(doc of allDocuments){
+                if(String(doc.owner) === String(owner_id) && String(doc.category) === String(category_id)){
+                    return doc._id;
+                }
+            }
+            return;
+        },
     });
-});
-
-//Redirect to selected document page.
-exports.document_list_redirect = asyncHandler(async (req, res, next) => {
-
-    const owner = await Owner.findById(req.body.ownerId).exec();
-    const category = await Category.findById(req.body.categoryId).exec();
-
-    const document = await Document.findOne({
-        category: category,
-        owner: owner,
-    }).exec();
-    // Process the request submission
-
-    res.redirect(document.url);
 });
 
 // Display detail page for a specific document.
@@ -92,89 +89,39 @@ exports.document_create_get = asyncHandler(async (req, res, next) => {
 });
 
 // Handle document create on POST.
-exports.document_create_post = [
-    //Validate and sanitize form input.
-    body("owner")
-        .trim()
-        .isLength({ min: 1 })
-        .escape()
-        .withMessage("Owner name must be specified."),
-    body("category")
-        .trim()
-        .isLength({ min: 1 })
-        .escape()
-        .withMessage("Category must be specified."),
-    asyncHandler(async (req, res, next) => {
-        // Check for validation errors.
-        const errors = validationResult(req);
+exports.document_create_post = asyncHandler(async (req, res, next) => {
+    // Check if a document with the same owner and category already exists.
+    const existingDocument = await Document.findOne({
+        owner: req.body.owner,
+        category: req.body.category,
+    }).exec();
+
+    if (existingDocument)
+        res.redirect(existingDocument.url);
+    else {
+        // No document with the same owner and category exists. Create the new document.
         const new_document = new Document({
             owner: req.body.owner,
             category: req.body.category,
         });
-        if (!errors.isEmpty()) {
-            // There are validation errors. Render the form again with sanitized values/error messages.
-            const [allOwners, allCategories] = await Promise.all([
-                Owner.find().exec(),
-                Category.find().exec(),
-            ]);
-            res.render('document_form', {
-                title: 'Create Document',
-                owners: allOwners,
-                categories: allCategories,
-                document: new_document,
-                errors: errors.array(),
-            });
-            return;
-        } else {
-            // No validation errors. Create the document.
-            const document = new Document({
-                owner: req.body.owner,
-                category: req.body.category,
-                status: req.body.status,
-            });
-            await document.save();
-            res.redirect("/");
-        }
-    }),
-];
+        await new_document.save();
+        res.redirect(new_document.url);
+    }
+});
 
-
-
-
-
-// Display document delete form on GET.
-exports.document_delete_get = asyncHandler(async (req, res, next) => {
+//Handle document deletion with DELETE.
+exports.document_delete = asyncHandler( async (req, res, next) => {
     const document = await Document.findById(req.params.id).exec();
     if (!document) {
-        // Document not found.
-        res.redirect('/');
-        return;
+        res.redirect('..');
+        // Document not found. Redirect back
     }
-    res.render('document_delete', { title: 'Delete Document', document: document });
+    const instances = await DocumentInstance.find({document: document},'id').exec();
+    for(const instance of instances) {
+        await DocumentInstance.findById(instance._id).exec();
+        console.log("Removed all instances of" + instance._id);
+    }
+    //await Document.findByIdAndRemove(req.params.id).exec();
+    console.log("Removed document:" + req.params.id);
+    res.redirect('/documents');
 });
-
-// Handle document delete on POST.
-exports.document_delete_post = asyncHandler(async (req, res, next) => {
-    //Delete document. Assumed correct id!
-    await Document.findByIdAndRemove(req.body.id).exec();
-    res.redirect('/');
-});
-
-
-// Display document update form on GET.
-exports.document_update_get = asyncHandler(async (req, res, next) => {
-    res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
-});
-
-// Handle document update on POST.
-// Handle document update on POST.
-exports.document_update_post = [
-    // Validate and sanitize form input.
-    body('expire_date_raw', 'Invalid expiry date')
-        .optional({ nullable: true })
-        .isISO8601()
-        .toDate(),
-    asyncHandler( async (req, res, next) => {
-        res.send(`NOT IMPLEMENTED: document detail: ${req.params.id}`);
-    }),
-];

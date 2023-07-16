@@ -1,38 +1,38 @@
 extends layout
 
 block content
-    main.container(role='main')
-        .starter-template
-            h1= title
 
-            form.col-3(method='POST' action='' enctype='multipart/form-data')
-                div.form-group
-                    label(for='category') Category:
-                    select#category.form-control(type='select', name='category', required='true')
-                        for category in categories_list
-                            option(value=category._id) #{category.name}
+    h1.mt-3.mb-3= title
 
-                div.form-group.mt-2
-                    label(for='owner') Owner:
-                    select#owner.form-control(type='select', name='owner', required='true')
-                        for owner in owners_list
-                            option(value=owner._id ) #{owner.name}
+    if errors
+        for error in errors
+            .alert.alert-warning.alert-dismissible.fade.show.col-4(role='alert')
+                | #{error.msg}
+                button.btn-close(type='button', data-bs-dismiss='alert', aria-label='Close')
 
-                div.form-group.mt-2
-                    label(for='update_date_raw') Update Date:
-                    input#update_date_raw.form-control(type='date' name='update_date_raw')
+    form.col-4(method='POST' action='' enctype='multipart/form-data')
+        div.form-group
+            label(for='category') Category:
+            select#category.form-control(type='select', name='category', required='true')
+                for category in categories_list
+                    option(value=category._id) #{category.name}
 
-                div.form-group.mt-2
-                    label(for='expire_date_raw') Expire Date:
-                    input#expire_date_raw.form-control(type='date' name='expire_date_raw')
+        div.form-group.mt-2
+            label(for='owner') Owner:
+            select#owner.form-control(type='select', name='owner', required='true')
+                for owner in owners_list
+                    option(value=owner._id ) #{owner.name}
 
-                div.form-group.mt-2
-                    label(for='document_file') Document File:
-                    input#document_file.form-control(type='file' name='document_file')
+        div.form-group.mt-2
+            label(for='update_date_raw') Update Date:
+            input#update_date_raw.form-control(type='date' name='update_date_raw')
 
-                button.btn.btn-primary.mt-3(type='submit') Submit
+        div.form-group.mt-2
+            label(for='expire_date_raw') Expire Date:
+            input#expire_date_raw.form-control(type='date' name='expire_date_raw')
 
-            if errors
-                ul
-                    for error in errors
-                        li!= error.msg
+        div.form-group.mt-2
+            label(for='document_file') Document File:
+            input#document_file.form-control(type='file' name='document_file')
+
+        button.btn.btn-primary.mt-3(type='submit') Submit

@@ -18,25 +18,6 @@ const DocumentInstance = require("../models/documentInstance");
 router.get('/', function(req, res, next) {
   res.render('index', {title: "Home", currPage: "home"});
 });
-/*exports.index = asyncHandler(async (req, res, next) => {
-  //res.send("NOT IMPLEMENTED: Site Home Page");
-  const [
-    numDocuments,
-    numOwners,
-    numDocTypes
-  ] = await Promise.all([
-    Document.countDocuments({}).exec(),
-    Owner.countDocuments({}).exec(),
-    DocumentType.countDocuments({}).exec(),
-  ])
-
-  res.render("index",{
-    title: "Document Tracking Home",
-    document_count: numDocuments,
-    owner_count: numOwners,
-    doctype_count: numDocTypes,
-  })
-});*/
 
 /**
  DOCUMENT ROUTES.
@@ -48,17 +29,8 @@ router.get("/document/create", document_controller.document_create_get);
 //POST request to create document.
 router.post("/document/create", document_controller.document_create_post);
 
-//GET request to remove document.
-router.get("/document/:id/delete", document_controller.document_delete_get);
-
-//POST request to remove document.
-router.post("/document/:id/delete", document_controller.document_delete_post);
-
-//GET request to update document.
-router.get("/document/:id/update", document_controller.document_update_get);
-
-//POST request to update document.
-router.post("/document/:id/update", document_controller.document_update_post);
+//DELETE request to remove document.
+router.delete("/delete/document/:id", document_controller.document_delete);
 
 //GET request for one document info.
 router.get("/document/:id", document_controller.document_detail);
@@ -66,9 +38,8 @@ router.get("/document/:id", document_controller.document_detail);
 //GET request for list of documents.
 router.get("/documents", document_controller.document_list);
 
+//GET request for list of documents filtered by relation.
 router.get("/documents/:relation", document_controller.document_list);
-
-router.post("/documents/:relation", document_controller.document_list_redirect);
 
 /**
   OWNER ROUTES.
@@ -85,9 +56,6 @@ router.get("/owner/:id", owner_controller.owner_detail);
 
 //DELETE request for specified owner.
 router.delete("/delete/owner/:id", owner_controller.owner_delete);
-
-//UPDATE request for specified owner.
-//router.update("/owner/:id", owner_controller.owner_delete);
 
 //GET request for list of owners.
 router.get("/owners", owner_controller.owners_list);

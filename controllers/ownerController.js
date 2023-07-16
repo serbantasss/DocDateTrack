@@ -29,31 +29,21 @@ exports.owner_create_get = (req, res, next) => {
 // Handle owner create on POST.
 exports.owner_create_post = [
     //Validate and sanitize form input.
-    body("first_name")
+    body("first_name","Invalid first name.")
         .trim()
-        .isLength({ min: 1 })
-        .escape()
-        .withMessage("First name must be specified.")
-        .isAlphanumeric()
-        .withMessage("First name has non-alphanumeric characters."),
-    body("last_name")
+        .isLength({ min: 3 })
+        .isAlphanumeric(),
+    body("last_name", "Invalid last name.")
         .trim()
-        .isLength({ min: 1 })
-        .escape()
-        .withMessage("Family name must be specified.")
-        .isAlphanumeric()
-        .withMessage("Family name has non-alphanumeric characters."),
-    body("email")
+        .isLength({ min: 3 })
+        .isAlphanumeric(),
+    body("email","Email adress is invalid.")
         .notEmpty()
-        .escape()
-        .isEmail()
-        .withMessage('Email adress is invalid.'),
-    body("phone")
+        .isEmail(),
+    body("phone","Phone adress is invalid.")
         .trim()
         .notEmpty()
-        .escape()
-        .isMobilePhone()
-        .withMessage('Phone number is invalid.'),
+        .isMobilePhone(),
 
     //Process request after valid and sanitize.
     asyncHandler(async (req, res, next) => {
@@ -68,12 +58,12 @@ exports.owner_create_post = [
         });
 
         if (!errors.isEmpty()){
+            console.log(errors.mapped());
             res.render("owner_form",{
                 title: "Create Owner",
                 owner: new_owner,
-                errors: errors.array(),
+                errors: errors.mapped(),
             });
-            return;
         } else {
             await new_owner.save();
             res.redirect("/owners");
@@ -158,7 +148,6 @@ exports.owner_update_post = [
         .escape()
         .isMobilePhone()
         .withMessage('Phone number is invalid.'),
-
     //Process request after valid and sanitize.
     asyncHandler(async (req, res, next) => {
         const errors = validationResult(req);
