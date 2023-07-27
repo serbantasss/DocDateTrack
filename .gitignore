@@ -66,3 +66,4 @@ typings/
 #oldfiles folders
 .oldshiz/
 
+/.idea/webServers.xml
