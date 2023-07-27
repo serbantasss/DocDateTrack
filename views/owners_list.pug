@@ -5,13 +5,13 @@ block content
     if owners_list.length > 0
         each owner in owners_list
             ul.list-group.mb-2.col-4
-                li.list-group-item.list-group-item-primary.d-flex
-                    a.text-decoration-none.flex-fill.align-self-center(href=`/owner/${owner._id}`) #{owner.name}
-                    form.align-self-center(method='POST', action=`/delete/owner/${owner._id}?_method=DELETE`)
-                        button.btn.btn-link(type='submit')
+                li.list-group-item.list-group-item-dark.d-flex
+                    a.flex-fill.align-self-center.text-reset.text-decoration-none.fs-5.fw-bold(href=`/owner/${owner._id}`) #{owner.name}
+                    form.align-self-center.ms-2(method='POST', action=`/delete/owner/${owner._id}?_method=DELETE`)
+                        button.btn.btn-danger(type='submit')
                             i.bi.bi-trash3
-                    form.align-self-center(method='POST', action=`/update/owner/${owner._id}?_method=UPDATE`)
-                        button.btn.btn-link(type='submit')
+                    form.align-self-center.ms-2(method='POST', action=`/update/owner/${owner._id}?_method=UPDATE`)
+                        button.btn.btn-warning(type='submit')
                             i.bi.bi-pencil-square
                 li.list-group-item &middot; #{owner.phone}
                 li.list-group-item &middot; #{owner.email}

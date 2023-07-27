@@ -65,6 +65,7 @@ exports.owner_create_post = [
                 errors: errors.mapped(),
             });
         } else {
+            console.log("lol");
             await new_owner.save();
             res.redirect("/owners");
         }

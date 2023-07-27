@@ -70,20 +70,11 @@ router.get("/category/create", category_controller.category_create_get);
 //POST request to create category.
 router.post("/category/create", category_controller.category_create_post);
 
-//GET request to remove category.
-router.get("/category/:id/delete", category_controller.category_delete_get);
-
-//POST request to remove category.
-router.post("/category/:id/delete", category_controller.category_delete_post);
-
-//GET request to update category.
-router.get("/category/:id/update", category_controller.category_update_get);
-
-//POST request to update category.
-router.post("/category/:id/update", category_controller.category_update_post);
-
-//GET request for one document info.
+//GET request for one category info.
 router.get("/category/:id", category_controller.category_detail);
+
+//DELETE request for one category.
+router.delete("/delete/category/:id", category_controller.category_delete);
 
 //GET request for list of categories.
 router.get("/categories", category_controller.category_list);
