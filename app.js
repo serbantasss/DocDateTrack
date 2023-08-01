@@ -8,18 +8,17 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 
 const compression = require("compression");
-const helmet = require("helmet");
 
 const app = express();
 
-// Set up rate limiter: maximum of twenty requests per minute
+// {Set up rate limiter: maximum of twenty requests per minute
 // const RateLimit = require("express-rate-limit");
 // const limiter = RateLimit({
 //   windowMs: 10 * 1000, // 10 seconds
 //   max: 10,
 // });
 // // Apply rate limiter to all requests
-// app.use(limiter);
+// app.use(limiter);}
 
 // Set up mongoose connection
 const mongoose = require("mongoose");
@@ -47,16 +46,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use(
-    helmet.contentSecurityPolicy({
-      directives: {
-        "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net", "maxcdn.bootstrapcdn.com", "ajax.googleapis.com"],
-      },
-    })
-);
-
 app.use(compression()); // Compress all routes
-
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -88,6 +78,5 @@ cron.schedule("0 * * * *", () => {
     //performDBCheck();
     console.log("DB Check");
 });
-
 
 module.exports = app;
