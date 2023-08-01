@@ -101,108 +101,26 @@ exports.document_instance_create_post =[
     }),
 ];
 
+//Handle document instance deletion on DELTETE request.
+exports.document_instance_delete = asyncHandler(async (req, res, next) => {
+    const documentInstance = await DocumentInstance.findById(req.params.id).exec();
+    // Remove the file from the 'uploads' folder
+    fs.unlink(`./uploads/${documentInstance.document_file}`, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Error deleting file");
+        }
+        console.log("File deleted successfully");
+    });
+
+    await DocumentInstance.findByIdAndRemove(req.params.id).exec();
+    console.log("Removed all instances of" + instance._id);
+    res.redirect('..');
+});
+
+//Handle document instance download on GET request.
+exports.document_instance_download_get =  (req, res, next) => {
+    res.download(`./uploads/${req.params.id}`);
+};
 
 
-
-
-
-// // Display document instance delete form on GET.
-// exports.document_instance_delete_get = asyncHandler(async (req, res, next) => {
-//     const document_instance = await DocumentInstance.findById(req.params.id).populate("document").exec();
-//     if (!document_instance) {
-//         // Document not found.
-//         res.redirect('/');
-//         return;
-//     }
-//     res.render('document_instance_form', { title: 'Delete Document Instance', document_instance: document_instance });
-// });
-//
-// // Handle document delete on POST.
-// exports.document_instance_delete_post = asyncHandler(async (req, res, next) => {
-//     //Delete document. Assumed correct id!
-//     await DocumentInstance.findByIdAndRemove(req.body.id).exec();
-//     res.redirect('/');
-// });
-
-
-// // Display document update form on GET.
-// exports.document_instance_update_get = asyncHandler(async (req, res, next) => {
-//     const document_instance = await DocumentInstance.findById(req.params.id).populate("document").exec();
-//     const allDocuments = await Document.find().exec();
-//     if (!document_instance) {
-//         // Document not found.
-//         const err = new Error("Document instance not found.");
-//         err.status = 404;
-//         return next(err);
-//     }
-//     res.render('document_instance_form', {
-//         title: 'Update Document Instance',
-//         document_list: allDocuments,
-//         selected_document: document_instance.document._id,
-//         document_instance: document_instance,
-//     });
-// });
-//
-// // Handle document update on POST.
-// exports.document_instance_update_post = [
-//     // Validate and sanitize form input.
-//     body("document")
-//         .trim()
-//         .isLength({ min: 1 })
-//         .escape()
-//         .withMessage("Document must be specified."),
-//     body("expire_date_raw", "Invalid expiry date")
-//         .optional({values: "falsy"})
-//         .isISO8601()
-//         .toDate(),
-//     body("document_file")
-//         .custom((value, { req }) => {
-//             if (!req.file) {
-//                 throw new Error('Document file is required.');
-//             }
-//             return true;
-//         }),
-//     asyncHandler(upload.single('document_file'), async (req, res, next) => {
-//         // Check for validation errors.
-//         const errors = validationResult(req);
-//         const new_document_instance = new DocumentInstance({
-//             document: req.body.document,
-//             expire_date_raw: req.body.expride_date_raw,
-//             update_date_raw: Date.now,
-//             document_file: req.body.document_file,
-//             _id: req.params.id,
-//         });
-//         if (!errors.isEmpty()) {
-//             // There are validation errors. Render the form again with sanitized values/error messages.
-//             //Get all owners and categories, which we can add to our document
-//             const allDocuments = await Document.find().exec();
-//
-//             res.render("document_instance_form",{
-//                 title: "Create Document Instance",
-//                 documents: allDocuments,
-//                 selected_document: new_document_instance.document._id,
-//                 errors: errors.array(),
-//                 document_instance: new_document_instance
-//             });
-//             return;
-//         } else {
-//             // No validation errors. Create the document.
-//             await DocumentInstance.findByIdAndUpdate(req.params.id, new_document_instance);
-//             res.redirect("/");
-//         }
-//
-//         // // No validation errors. Update the document.
-//         // const document = await Document.findById(req.params.id).exec();
-//         // if (!document) {
-//         //     // Document not found.
-//         //     res.redirect('/');
-//         //     return;
-//         // }
-//         // document.expire_date = req.body.expire_date_raw;
-//         // if (req.file) {
-//         //     document.document_file = req.file.path;
-//         // }
-//         // await document.save();
-//         // res.redirect('/');
-//     }),
-// ];

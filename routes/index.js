@@ -98,10 +98,19 @@ router.get("/document_instance/:id", document_instance_controller.document_insta
 router.get("/document_instances", document_instance_controller.document_instance_list);
 
 //GET request to download document instance file.
-router.get("/download/:id", asyncHandler(async (req, res, next) => {
-  res.download(`./uploads/${req.params.id}`);
-}));
+router.get("/document_instance/download/:id", document_instance.document_instance_download_get);
 
+//DELETE request to delete document instance file.
+router.delete("/delete/document_instance/:id", document_instance_controller.document_instance_delete);
+
+//GET request to edit document instance file.
+router.get("/edit/document_instance/:id", document_instance_controller.document_instance_edit_get);
+
+//POST request to delete document instance file.
+router.post("/edit/document_instance/:id", document_instance_controller.document_instance_edit_post);
+
+
+//
 /**
  * EXTRA ROUTES
  */
