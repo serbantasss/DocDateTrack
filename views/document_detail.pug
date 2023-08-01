@@ -41,16 +41,22 @@ block content
                     -    cl = 'list-group-item-warning'
                     - if (daysDiff <= -30)
                     -   cl = 'list-group-item-success'
-                    a.list-group-item(class= cl href=`/download/${instance.document_file}`, aria-current='true')
+
+                    .list-group-item(class= cl aria-current='true')
                         .d-flex.w-100.justify-content-between
                             h5.mb-1 Instance ID: #{instance.document_file}
                             small #{time_ago(instance.update_date_raw)}
-                        if cl === 'list-group-item-danger'
-                            small Expired!
-                        else if cl === 'list-group-item-warning'
-                            small Expires #{time_ago(instance.expire_date_raw)}. Please Update!
-                        else
-                            small Expires #{time_ago(instance.expire_date_raw)}.
+                        .d-flex
+                            if cl === 'list-group-item-danger'
+                                small.align-self-end Expired!
+                            else if cl === 'list-group-item-warning'
+                                small.align-self-end Expires #{time_ago(instance.expire_date_raw)}. Please Update!
+                            else
+                                small.align-self-end Expires #{time_ago(instance.expire_date_raw)}.
+                            a.btn.btn-success.bi.bi-download.ms-auto(href=`/document_instance/download/${instance.document_file}`)
+                            a.btn.btn-danger.bi.bi-trash3.ms-1(href=`/delete/document_instance/${instance.document_file}`)
+                            a.btn.btn-warning.bi.bi-pencil-square.text-white.ms-1(href=`/edit/document_instance/${instance.document_file}`)
+
 
 
                 else
