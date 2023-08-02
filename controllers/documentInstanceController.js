@@ -7,6 +7,7 @@ const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 
 const multer = require('multer');
+const fs = require("fs");
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -114,8 +115,8 @@ exports.document_instance_delete = asyncHandler(async (req, res, next) => {
     });
 
     await DocumentInstance.findByIdAndRemove(req.params.id).exec();
-    console.log("Removed all instances of" + instance._id);
-    res.redirect('..');
+    console.log("Removed all instances of" + req.params._id);
+    res.redirect('/');
 });
 
 //Handle document instance download on GET request.
