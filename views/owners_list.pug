@@ -10,9 +10,7 @@ block content
                     form.align-self-center.ms-2(method='POST', action=`/delete/owner/${owner._id}?_method=DELETE`)
                         button.btn.btn-danger(type='submit')
                             i.bi.bi-trash3
-                    form.align-self-center.ms-2(method='POST', action=`/update/owner/${owner._id}?_method=UPDATE`)
-                        button.btn.btn-warning(type='submit')
-                            i.bi.bi-pencil-square
+                    a.btn.btn-warning.bi.bi-pencil-square.text-white.ms-2.align-self-center(href=`/owner/update/${owner._id}`)
                 li.list-group-item &middot; #{owner.phone}
                 li.list-group-item &middot; #{owner.email}
     else

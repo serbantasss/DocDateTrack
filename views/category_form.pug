@@ -14,14 +14,15 @@ block content
             form.col-3(method='POST' action='')
 
                 div.form-group.mt-2
-                    label(for='name') Name:
-                    input#name.form-control(type='text', placeholder='' name='name' required='true' value=(undefined === category ? '' : category.name) )
+                    label(for='name') First Name:
+                    input#name.form-control(type='text', placeholder='' name='name' required='true' value=(undefined === category ? '' : category.name))
 
                 div.form-group.mt-2
                     label(for='rel') Relation:
-                    select#rel.form-control(type='select', placeholder='Select relation' name='rel')
+                    select#rel.form-control(type='select' placeholder='Select relation' name='rel')
+                        option(value='' selected=(category == undefined )) none
                         for rel in relations
-                            option(value='#{rel}' selected=((undefined === category || category.relation != '#{rel}') ? false : 'selected' )) #{rel}
+                            option(value=`${rel}` selected=(category != undefined && category.relation == rel)) #{rel}
 
                 button.btn.btn-primary.mt-3(type='submit') Submit
 

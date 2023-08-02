@@ -101,3 +101,48 @@ exports.category_delete = asyncHandler(async (req, res, next) => {
     }
 });
 
+// Display category create form on GET.
+exports.category_update_get = asyncHandler(async (req, res, next) => {
+    const category = await Category.findById(req.params.id).exec();
+    if (category === null){
+        //No result.
+        const err = new Error("Category not found!");
+        err.status = 404;
+        return next(err);
+    }
+    res.render("category_form",{
+        title: "Create new Category",
+        relations: Category.schema.path('relation').enumValues,
+        category: category,
+        currPage: 'categories',
+    });
+});
+
+// Handle category create on POST.
+exports.category_update_post = [
+    body("name")
+        .isLength({ min: 1 })
+        .withMessage("First name must be specified."),
+    asyncHandler(async (req, res, next) => {
+        const errors = validationResult(req);
+
+        const updated_category = new Category({
+            name: req.body.name,
+            relation: req.body.rel,
+            _id: req.params.id,
+        });
+        console.log(req.body);
+        if(!errors.isEmpty()){
+            res.render("category_form",{
+                title: "Create new Category",
+                category: updated_category,
+                relations: Category.schema.path('relation').enumValues,
+                errors: errors.array(),
+            });
+        } else {
+            await Category.findByIdAndUpdate(req.params.id, updated_category);
+            // Updated category. Redirect to categories list.
+            res.redirect("/categories");
+        }
+    }),
+];

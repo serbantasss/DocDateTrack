@@ -6,13 +6,11 @@ block content
         each category in category_list
             ul.list-group.mb-2.col-4
                 li.list-group-item.list-group-item-dark.d-flex
-                    a.flex-fill.align-self-center.text-reset.text-decoration-none.fs-5.fw-bold(href=`/category/${category._id}`) #{category.name}
-                    form.ms-2.align-self-center(method='POST', action=`/delete/category/${category._id}?_method=DELETE`)
+                    a.align-self-center.text-reset.text-decoration-none.fs-5.fw-bold(href=`/category/${category._id}`) #{category.name}
+                    form.align-self-center.ms-auto(method='POST', action=`/delete/category/${category._id}?_method=DELETE`)
                         button.btn.btn-danger(type='submit')
                             i.bi.bi-trash3
-                    form.ms-2.align-self-center(method='POST', action=`/update/category/${category._id}?_method=UPDATE`)
-                        button.btn.btn-warning(type='submit')
-                            i.bi.bi-pencil-square.text-white
+                    a.btn.btn-warning.bi.bi-pencil-square.text-white.align-self-center.ms-2(href=`/category/update/${category._id}`)
                 li.list-group-item
                     | &middot; Tip:&nbsp;
                     strong #{category.relation}

@@ -57,6 +57,13 @@ router.get("/owner/:id", owner_controller.owner_detail);
 //DELETE request for specified owner.
 router.delete("/delete/owner/:id", owner_controller.owner_delete);
 
+//GET request to update owner.
+router.get("/owner/update/:id", owner_controller.owner_update_get);
+
+//POST request to update owner.
+router.post("/owner/update/:id", owner_controller.owner_update_post);
+
+
 //GET request for list of owners.
 router.get("/owners", owner_controller.owners_list);
 
@@ -76,6 +83,12 @@ router.get("/category/:id", category_controller.category_detail);
 //DELETE request for one category.
 router.delete("/delete/category/:id", category_controller.category_delete);
 
+//GET request to update category.
+router.get("/category/update/:id", category_controller.category_update_get);
+
+//POST request to update category.
+router.post("/category/update/:id", category_controller.category_update_post);
+
 //GET request for list of categories.
 router.get("/categories", category_controller.category_list);
 
@@ -94,20 +107,21 @@ router.post("/document_instance/create", document_instance_controller.document_i
 //GET request for one document info.
 router.get("/document_instance/:id", document_instance_controller.document_instance_detail);
 
+//GET request to download document instance file.
+router.get("/document_instance/download/:id", document_instance_controller.document_instance_download_get);
+
+//DELETE request to delete document instance file.
+router.delete("/document_instance/delete/:id", document_instance_controller.document_instance_delete);
+
 //GET request for list of documents.
 router.get("/document_instances", document_instance_controller.document_instance_list);
 
-//GET request to download document instance file.
-router.get("/document_instance/download/:id", document_instance.document_instance_download_get);
 
-//DELETE request to delete document instance file.
-router.delete("/delete/document_instance/:id", document_instance_controller.document_instance_delete);
-
-//GET request to edit document instance file.
-router.get("/edit/document_instance/:id", document_instance_controller.document_instance_edit_get);
-
-//POST request to delete document instance file.
-router.post("/edit/document_instance/:id", document_instance_controller.document_instance_edit_post);
+// //GET request to edit document instance file.
+// router.get("/edit/document_instance/:id", document_instance_controller.document_instance_edit_get);
+//
+// //POST request to delete document instance file.
+// router.post("/edit/document_instance/:id", document_instance_controller.document_instance_edit_post);
 
 
 //
