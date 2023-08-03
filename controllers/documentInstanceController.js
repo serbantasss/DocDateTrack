@@ -8,6 +8,7 @@ const { body, validationResult } = require("express-validator");
 
 const multer = require('multer');
 const fs = require("fs");
+const {DateTime} = require("luxon");
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -44,11 +45,16 @@ exports.document_instance_list = asyncHandler(async (req, res, next) => {
         .sort({ expire_date_raw: 1})
         .populate("document")
         .exec();
-
-    res.render("document_instance_list", {
+    res.render("instance_list", {
         title: "Document Instance List",
         currPage: "document_instances" ,
-        document_instances: allDocumentsInstances
+        instances: allDocumentsInstances,
+        daysDifference: function(raw_date){
+            return parseInt(DateTime.now().diff(DateTime.fromJSDate(raw_date), "days").days);
+        },
+        time_ago: function(raw_date){
+            return DateTime.fromJSDate(raw_date).toRelativeCalendar();
+        },
     });
 });
 
@@ -63,7 +69,7 @@ exports.document_instance_create_get = asyncHandler(async (req, res, next) => {
     const allCategories = await Category.find().exec();
     const allOwners = await Owner.find().exec();
 
-    res.render("document_instance_form",{
+    res.render("instance_form",{
         title: "Create Document Instance",
         categories_list: allCategories,
         owners_list: allOwners,

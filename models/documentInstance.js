@@ -13,7 +13,6 @@ const DocumentInstanceSchema = new Schema({
 DocumentInstanceSchema.virtual("url").get(function () {
     return `/document_instance/${this._id}`;
 });
-
 //Virtual for formatted expire date
 DocumentInstanceSchema.virtual("expire_date").get(function(){
     return DateTime.fromJSDate(this.expire_date_raw).toLocaleString(DateTime.DATE_MED);
