@@ -41,8 +41,6 @@ exports.document_list = asyncHandler(async (req, res, next) => {
 exports.document_detail = asyncHandler(async (req, res, next) => {
 
     const document = await Document.findById(req.params.id)
-        .populate("owner")
-        .populate("category")
         .exec();
 
     if (!document) {
@@ -51,12 +49,10 @@ exports.document_detail = asyncHandler(async (req, res, next) => {
         throw error;
     }
 
-    const owner = document.owner;
-    const category = document.category;
+    const owner = document.ownerData;
+    const category = document.categoryData;
 
     const instances = await DocumentInstance.find({document: document}).exec();
-
-    const currentDate = DateTime.now();
 
     res.render("document_detail", {
         title: "Document Detail",
@@ -65,7 +61,7 @@ exports.document_detail = asyncHandler(async (req, res, next) => {
         category,
         instances,
         daysDifference: function(raw_date){
-            return parseInt(currentDate.diff(DateTime.fromJSDate(raw_date), "days").days);
+            return parseInt(DateTime.now().diff(DateTime.fromJSDate(raw_date), "days").days);
         },
         time_ago: function(raw_date){
             return DateTime.fromJSDate(raw_date).toRelativeCalendar();
