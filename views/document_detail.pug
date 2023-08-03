@@ -3,7 +3,7 @@ extends layout
 block content
     main.container(role='main')
         .starter-template
-
+            p #{document.ownerData}
             h1.mt-3 #{category.name} of #{owner.name}
             .row
                 .col.col-auto.d-flex.align-items-stretch

@@ -1,0 +1,30 @@
+extends layout
+
+block content
+    h1.mb-3 List of all documents
+    table.table(style='border-radius: 6px; overflow: hidden;')
+        thead.table-light
+            tr
+                th(scope='col') #
+                th(scope='col') Name
+                th(scope='col') Update Date
+                th(scope='col') Expire Date
+                th(scope='col') Actions
+        tbody
+            each instance,index in instances
+                - let cl = ''
+                - let daysDiff = daysDifference(instance.expire_date_raw)
+                - if (daysDiff > 0) cl = 'table-danger'
+                - if (daysDiff > -30 && daysDiff <= 0) cl = 'table-warning'
+                - if (daysDiff <= -30) cl = 'table-success'
+                tr(class= cl)
+                    th #{index}
+                    td
+                        a.text-decoration-none(href=`/document/${instance.document._id}`) #{instance.document.name}
+                    td.text-capitalize #{time_ago(instance.update_date_raw)}
+                    td.text-capitalize #{time_ago(instance.expire_date_raw)}
+                    td.d-flex
+                        a.btn.btn-success.bi.bi-download(href=`/document_instance/download/${instance.document_file}`)
+                        form.align-self-center.ms-2(method='POST', action=`/document_instance/delete/${instance._id}?_method=DELETE`)
+                            button.btn.btn-danger(type='submit')
+                                i.bi.bi-trash3
