@@ -69,3 +69,7 @@ typings/
 /.idea/webServers.xml
 /uploads/
 /ssl/
+
+#SSL/TLS
+*.crt
+*.key
