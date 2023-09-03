@@ -3,25 +3,16 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const mongoose = require("mongoose");
+const cron = require('node-cron');
+const performDBCheck = require('./tasks/document-status_update');//script to send emails
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 
-const compression = require("compression");
-
 const app = express();
 
-// {Set up rate limiter: maximum of twenty requests per minute
-// const RateLimit = require("express-rate-limit");
-// const limiter = RateLimit({
-//   windowMs: 10 * 1000, // 10 seconds
-//   max: 10,
-// });
-// // Apply rate limiter to all requests
-// app.use(limiter);}
-
 // Set up mongoose connection
-const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 
 const dev_db_url =
@@ -45,11 +36,9 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
-app.use(compression()); // Compress all routes
-
 app.use(express.static(path.join(__dirname, 'public')));
 
+//router routes
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
@@ -68,10 +57,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
-//script to send emails
-const cron = require('node-cron');
-const performDBCheck = require('./tasks/document-status_update');
 
 // Schedule the script to run every hour (change the cron schedule as per your requirement)
 cron.schedule("0 * * * *", () => {
