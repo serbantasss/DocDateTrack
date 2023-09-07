@@ -64,7 +64,7 @@ typings/
 .DS_Store
 
 #deployment.xml
-deployment.xml
+.idea/deployment.xml
 
 #oldfiles folders
 .oldshiz/
