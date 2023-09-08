@@ -63,9 +63,17 @@ typings/
 #DS_STORE
 .DS_Store
 
+#deployment.xml
+.xml
+
 #oldfiles folders
 .oldshiz/
 
 /.idea/webServers.xml
 /uploads/
 /ssl/
+
+#SSL/TLS
+*.crt
+*.key
+/machinet.conf

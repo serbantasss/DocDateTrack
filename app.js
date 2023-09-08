@@ -1,27 +1,23 @@
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const connectEnsureLogin = require('connect-ensure-login');
+
+const cron = require('node-cron');
+const performDBCheck = require('./tasks/document-status_update');//script to send emails
 
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-
-const compression = require("compression");
+const publicRouter = require('./routes/public');
 
 const app = express();
 
-// {Set up rate limiter: maximum of twenty requests per minute
-// const RateLimit = require("express-rate-limit");
-// const limiter = RateLimit({
-//   windowMs: 10 * 1000, // 10 seconds
-//   max: 10,
-// });
-// // Apply rate limiter to all requests
-// app.use(limiter);}
-
 // Set up mongoose connection
-const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 
 const dev_db_url =
@@ -45,13 +41,34 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-
-app.use(compression()); // Compress all routes
-
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// session initialization
+app.use(session({
+  secret: 'mataebunadaa',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 60 * 60 * 1000 } // 1 hour
+}));
+
+// Using the flash middleware provided by connect-flash to store messages in session
+// and displaying in templates
+const flash = require('connect-flash');
+app.use(flash());
+
+//Use passport middleware for authentication
+app.use(passport.initialize());
+app.use(passport.session());
+
+const Owner = require('./models/owner');
+passport.use(Owner.createStrategy());
+
+passport.serializeUser(Owner.serializeUser());
+passport.deserializeUser(Owner.deserializeUser());
+
+//router routes
+app.use('/', publicRouter);
+app.use('/', connectEnsureLogin.ensureLoggedIn(), indexRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -68,10 +85,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
-//script to send emails
-const cron = require('node-cron');
-const performDBCheck = require('./tasks/document-status_update');
 
 // Schedule the script to run every hour (change the cron schedule as per your requirement)
 cron.schedule("0 * * * *", () => {
