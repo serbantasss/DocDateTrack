@@ -76,3 +76,4 @@ typings/
 #SSL/TLS
 *.crt
 *.key
+/machinet.conf

@@ -1,14 +1,19 @@
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const mongoose = require("mongoose");
+const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const connectEnsureLogin = require('connect-ensure-login');
+
 const cron = require('node-cron');
 const performDBCheck = require('./tasks/document-status_update');//script to send emails
 
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
+const publicRouter = require('./routes/public');
 
 const app = express();
 
@@ -38,14 +43,32 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// session initialization
+app.use(session({
+  secret: 'mataebunadaa',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 60 * 60 * 1000 } // 1 hour
+}));
+
 // Using the flash middleware provided by connect-flash to store messages in session
 // and displaying in templates
 const flash = require('connect-flash');
 app.use(flash());
 
+//Use passport middleware for authentication
+app.use(passport.initialize());
+app.use(passport.session());
+
+const Owner = require('./models/owner');
+passport.use(Owner.createStrategy());
+
+passport.serializeUser(Owner.serializeUser());
+passport.deserializeUser(Owner.deserializeUser());
+
 //router routes
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/', publicRouter);
+app.use('/', connectEnsureLogin.ensureLoggedIn(), indexRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

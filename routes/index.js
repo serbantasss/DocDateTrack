@@ -7,7 +7,6 @@ const document_controller = require("../controllers/documentController");
 const category_controller = require("../controllers/categoryController");
 const document_instance_controller = require("../controllers/documentInstanceController");
 
-
 const asyncHandler = require("express-async-handler");
 const Document = require("../models/document");
 const Owner = require("../models/owner");
