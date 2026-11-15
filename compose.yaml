@@ -1,0 +1,24 @@
+services:
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "127.0.0.1:${MONGODB_PORT:-27018}:27017"
+    volumes:
+      - docdatetrack-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  seed-demo-data:
+    build: .
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/docdatetrack_dev
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-LocalDemoOnly123!}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  docdatetrack-mongo-data:
