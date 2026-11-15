@@ -8,12 +8,11 @@ const asyncHandler = require("express-async-handler");
 
 // GET login page
 router.get('/login', function(req, res, next) {
-  res.render('login_form');
+  res.render('login_form', { loginError: req.query.error === '1' });
 });
 
 //POST login form with redirect
-router.post('/login', passport.authenticate('local', { failureRedirect: '/' }),  function(req, res) {
-  console.log(req.user);
+router.post('/login', passport.authenticate('local', { failureRedirect: '/login?error=1' }),  function(req, res) {
   res.redirect('/');
 });
 

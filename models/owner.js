@@ -9,7 +9,7 @@ const OwnerSchema = new Schema({
     email: { type: String, required: true , unique: true},
 });
 
-OwnerSchema.plugin(passportLocalMongoose);
+OwnerSchema.plugin(passportLocalMongoose, { usernameQueryFields: ['email'] });
 
 // Virtual for author's full name
 OwnerSchema.virtual('name').get(function () {

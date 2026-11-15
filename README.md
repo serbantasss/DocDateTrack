@@ -1,91 +1,86 @@
-# Official Document Archive App
+# DocDateTrack
 
-![App Screenshot](screenshot.png)
+DocDateTrack is an Express application for managing official documents, owners, categories, and uploaded document instances. It uses MongoDB through Mongoose and renders its interface with Pug.
 
-## Overview
+## Local development
 
-The Official Document Archive App is a Node.js web application built with Express.js and Bootstrap. It serves as a platform for archiving, managing, and tracking official documents within an organization.
+### Requirements
 
-## Features
+- macOS or Linux (or Windows through WSL)
+- [nvm](https://github.com/nvm-sh/nvm) for Node.js version management
+- Docker for a local MongoDB database
 
-- User authentication and authorization
-- Document upload and storage
-- Categorization and tagging of documents
-- Search and filter functionality
-- User-friendly interface with Bootstrap
-
-## Prerequisites
-
-Before running this application, make sure you have the following installed:
-
-- Node.js and npm
-- MongoDB
-
-## Installation
-
-1. Clone the repository:
+The project targets Node.js 24 LTS. From the repository directory, install and activate the pinned major version, then install the locked dependencies:
 
 ```bash
-git clone https://github.com/yourusername/official-document-archive-app.git
-cd official-document-archive-app
+nvm install
+nvm use
+npm ci
 ```
 
-2. Install dependencies:
+Create a local environment file and generate a session secret:
 
 ```bash
-npm install
+cp .env.example .env
+openssl rand -hex 32
 ```
 
-3. Set up environment variables:
+Copy the generated value into `SESSION_SECRET` in `.env`. The example file points to a separate local database named `docdatetrack_dev`. Do not use production credentials or real business documents in local development.
 
-Create a `.env` file in the root directory with the following content:
-
-```
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/document_archive
-SECRET_KEY=your_secret_key
-```
-
-Make sure to replace `your_secret_key` with a strong secret for session management.
-
-## Usage
-
-1. Start the application:
+Start MongoDB and build/run the one-shot demo-data seeder:
 
 ```bash
-npm start
+docker compose up --build -d
 ```
 
-2. Open your web browser and go to [http://localhost:3000](http://localhost:3000).
+The MongoDB port is bound to the local machine only; database data persists in the `docdatetrack-mongo-data` volume. Compose uses port `27018` by default to avoid colliding with other local MongoDB services. If it is occupied, set `MONGODB_PORT` in `.env` to another free port and update `MONGODB_URI` to match. The seeder creates three demo accounts, three document categories, and nine documents. The demo accounts are `demo`, `demo.jamie`, and `demo.taylor`; they all use the `DEMO_USER_PASSWORD` value (defaults to `LocalDemoOnly123!`). Change this value in `.env` before seeding if desired. These credentials are for local development only and must never be used in a deployed environment. The seeder is idempotent and refuses to write to databases other than `docdatetrack_dev`.
 
-3. Register a new account or log in with an existing one.
+If you change or remove demo data and want to run the seeder again:
 
-4. Begin uploading, categorizing, and managing your official documents.
+```bash
+docker compose run --build --rm seed-demo-data
+```
 
-## Contributing
+Start the application:
 
-If you'd like to contribute to this project, please follow these steps:
+```bash
+npm run devstart
+```
 
-1. Fork the repository.
-2. Create a new branch for your feature: `git checkout -b feature-name`.
-3. Commit your changes: `git commit -m 'Add some feature'`.
-4. Push to the branch: `git push origin feature-name`.
-5. Submit a pull request.
+Open [http://localhost:8080](http://localhost:8080). `npm start` starts the app without file watching.
 
-## License
+Stop and restart the database container with:
 
-This project is licensed under the [MIT License](LICENSE).
+```bash
+docker compose stop mongo
+docker compose start mongo
+```
 
-## Acknowledgements
+To stop all Compose services while retaining the database volume:
 
-- [Express.js](https://expressjs.com/)
-- [Bootstrap](https://getbootstrap.com/)
-- [MongoDB](https://www.mongodb.com/)
+```bash
+docker compose down
+```
 
-## Contact
+To permanently remove the local database and all its data:
 
-For inquiries, please contact [your@email.com](mailto:your@email.com).
+```bash
+docker compose down --volumes
+```
 
----
+## Configuration
 
-[//]: # (**Note**: This README template is a starting point. Please customize it as needed for your specific application.)
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `PORT` | No | `8080` | HTTP port |
+| `MONGODB_URI` | Yes | — | MongoDB connection string |
+| `MONGODB_PORT` | No | `27018` | Host port published by Docker Compose for MongoDB |
+| `SESSION_SECRET` | Yes | — | Secret used to sign session cookies |
+| `DEMO_USER_PASSWORD` | No | `LocalDemoOnly123!` | Password assigned to seeded demo accounts; local development only |
+| `SSL_KEY_PATH` | No | — | Path to a TLS private key; configure with `SSL_CERT_PATH` |
+| `SSL_CERT_PATH` | No | — | Path to the matching TLS certificate; configure with `SSL_KEY_PATH` |
+| `PORT_HTTPS` | No | `8443` | HTTPS port when both TLS paths are set |
+
+The application connects to MongoDB before it starts listening. Startup fails with an error if required configuration is missing or the database cannot be reached. HTTP is used by default; local certificates are not needed. In production, TLS is generally better terminated by the hosting platform or reverse proxy.
+
+`.env` and other `.env.*` files are ignored by Git; `.env.example` is safe to commit and contains local defaults and placeholders, not production credentials.

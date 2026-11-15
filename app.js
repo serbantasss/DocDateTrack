@@ -6,7 +6,6 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
 const connectEnsureLogin = require('connect-ensure-login');
 
 const cron = require('node-cron');
@@ -17,16 +16,10 @@ const publicRouter = require('./routes/public');
 
 const app = express();
 
-// Set up mongoose connection
 mongoose.set("strictQuery", false);
 
-const dev_db_url =
-    "mongodb+srv://docAdmin:docPassword@cluster0.zaexh0d.mongodb.net/doctrackbase1?retryWrites=true&w=majority";
-const mongoDB = process.env.MONGODB_URI || dev_db_url;
-
-main().catch((err) => console.log(err));
-async function main() {
-  await mongoose.connect(mongoDB);
+if (!process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET must be set before starting the application');
 }
 
 // Set up method override.
@@ -45,7 +38,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // session initialization
 app.use(session({
-  secret: 'mataebunadaa',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 60 * 60 * 1000 } // 1 hour

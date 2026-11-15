@@ -96,8 +96,8 @@ html.h-100(lang='en', data-bs-theme='')
 
                 h1.h3.mb-3.fw-normal Sign in
                 .form-floating
-                    input#floatingInput.form-control(type='text', placeholder='name@example.com' name='username')
-                    label(for='floatingInput') Email address
+                    input#floatingInput.form-control(type='text', placeholder='Username or email' name='username')
+                    label(for='floatingInput') Username or email
                 .form-floating
                     input#floatingPassword.form-control(type='password', placeholder='Password' name='password')
                     label(for='floatingPassword') Password
@@ -108,4 +108,6 @@ html.h-100(lang='en', data-bs-theme='')
                 button.btn.btn-primary.w-100.py-2(type='submit') Sign in
                 p.mt-2.text-start Not a member? &nbsp;
                     a.text-decoration-none(href='/register') Signup now
+                if loginError
+                    p.alert.alert-danger.mt-3(role='alert') Login failed. Check your username or email and password, then try again.
                 p.mt-5.mb-3.text-body-secondary &copy; Pandora Medical 2014-2023
