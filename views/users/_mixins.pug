@@ -1,0 +1,28 @@
+//-
+  views/users/_mixins.pug — helpers for the user administration and account pages.
+  Mixin definitions only: include it at the top of a page (`include _mixins` from
+  views/users, `include ../users/_mixins` from other folders).
+
+  +roleBadge(role)
+    Badge with the role label from the `roles` local (User.ROLES).
+    Example:  +roleBadge(user.role)
+
+  +timestamp(value, emptyText)
+    <time> element showing fmt.dateTime(value), or muted `emptyText` (default '—')
+    when there is no value. Attributes go to the element.
+    Example:  +timestamp(user.last_login_at, 'Never')
+
+mixin roleBadge(role)
+  -
+    var roleIsAdmin = role === 'admin';
+    var roleLabel = (roles && roles[role]) || (role ? String(role) : 'Unknown');
+  span(class=['badge', 'rounded-pill', roleIsAdmin ? 'text-bg-primary' : 'border text-secondary-emphasis bg-secondary-subtle border-secondary-subtle'])&attributes(attributes)
+    +icon(roleIsAdmin ? 'shield-check' : 'person')(class='me-1')
+    = roleLabel
+
+mixin timestamp(value, emptyText)
+  - var stampDate = value ? new Date(value) : null;
+  if stampDate && !isNaN(stampDate.getTime())
+    time(datetime=stampDate.toISOString())&attributes(attributes)= fmt.dateTime(stampDate)
+  else
+    span.text-body-secondary&attributes(attributes)= emptyText || '—'

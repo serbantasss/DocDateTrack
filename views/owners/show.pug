@@ -1,0 +1,85 @@
+//-
+  Owner detail. Locals: title, owner, rows (findDocumentsWithStatus() rows sorted by urgency),
+  summary (summarize(rows)), phoneHref(phone) (`tel:` link or null).
+extends ../layout
+include ../mixins/documents
+
+block content
+  -
+    var ownerTel = phoneHref(owner.phone);
+    var ownerDocumentsUrl = '/documents?owner=' + owner._id;
+  +pageHeader({ title: owner.name, icon: 'person-vcard', subtitle: 'Owner', breadcrumbs: [{ label: 'Owners', href: '/owners' }] })
+    +linkButton(`/documents/new?owner=${owner._id}`, 'Add document', { icon: 'file-earmark-plus', variant: 'primary' })
+    +linkButton(`/versions/new?owner=${owner._id}`, 'Upload version', { icon: 'cloud-arrow-up' })
+    +linkButton(`${owner.url}/edit`, 'Edit', { icon: 'pencil-square' })
+    +deleteButton(owner.url, { confirm: `Delete ${owner.name}? All their documents, versions and uploaded files will be removed permanently. This cannot be undone.` })
+
+  .row.g-4
+    .col-lg-4
+      .card.mb-4
+        .card-body
+          h2.h6.card-title.mb-3 Contact
+          dl.mb-0
+            dt.small.fw-normal.text-body-secondary Email
+            dd
+              if owner.email
+                a.text-break(href=`mailto:${owner.email}`)
+                  +icon('envelope')(class='me-1')
+                  = owner.email
+              else
+                span.text-body-secondary Not provided
+            dt.small.fw-normal.text-body-secondary Phone
+            dd.mb-0
+              if ownerTel
+                a.text-break(href=ownerTel)
+                  +icon('telephone')(class='me-1')
+                  = owner.phone
+              else if owner.phone
+                span.text-break
+                  +icon('telephone')(class='me-1')
+                  = owner.phone
+              else
+                span.text-body-secondary Not provided
+
+      .card.mb-4
+        .card-body
+          h2.h6.card-title.mb-3 Status
+          ul.list-unstyled.mb-0
+            each statusKey in ['expired', 'expiring', 'missing', 'valid']
+              li.d-flex.justify-content-between.align-items-center.py-1
+                +statusBadge(statusKey)
+                if summary[statusKey]
+                  - var statusCount = summary[statusKey]
+                  a.fw-semibold.text-decoration-none(href=`${ownerDocumentsUrl}&status=${statusKey}` aria-label=`${statusCount}: show ${statusCount === 1 ? 'the document' : 'the documents'} with the status ${statusMeta[statusKey].label}`)= statusCount
+                else
+                  span.text-body-secondary 0
+
+      if owner.notes
+        .card.mb-4
+          .card-body
+            h2.h6.card-title.mb-3 Notes
+            p.card-text.text-break
+              each noteLine, noteIndex in owner.notes.split('\n')
+                if noteIndex
+                  br
+                = noteLine
+
+      p.small.text-body-secondary.mb-0
+        | Added #{fmt.dateTime(owner.createdAt)}
+        if owner.updatedAt && String(owner.updatedAt) !== String(owner.createdAt)
+          br
+          | Last changed #{fmt.dateTime(owner.updatedAt)}
+
+    .col-lg-8
+      .card
+        .card-header.d-flex.flex-wrap.justify-content-between.align-items-center.gap-2
+          h2.h6.mb-0
+            | Documents
+            span.badge.rounded-pill.text-bg-secondary.ms-2= summary.total
+          if rows.length
+            a.small(href=ownerDocumentsUrl) Open in the document list
+        if rows.length
+          +documentsTable(rows, { showOwner: false, caption: `Documents of ${owner.name}` })
+        else
+          .card-body
+            +emptyState({ icon: 'file-earmark-text', title: 'No documents yet', message: `Add a document — such as a passport or a driving licence — to start tracking the expiry dates of ${owner.name}.`, action: { href: `/documents/new?owner=${owner._id}`, label: 'Add document', icon: 'file-earmark-plus' } })

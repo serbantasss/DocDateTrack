@@ -1,43 +1,35 @@
-const mongoose = require("mongoose");
-const { DateTime } = require("luxon");
-const Schema = mongoose.Schema;
-const autopopulate = require('mongoose-autopopulate');
+const mongoose = require('mongoose');
 
-const DocumentSchema = new Schema({
-    owner: { type: Schema.Types.ObjectId, ref: "Owner", required: true },
-    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
-    status: {
-        type: String,
-        enum: ["Updated", "Expired", "Update Soon"],
+const documentSchema = new mongoose.Schema(
+  {
+    // Queries by owner use the { owner, category } compound index below.
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Owner', required: true },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      required: true,
+      index: true,
     },
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: [2000, 'The notes must be at most 2000 characters long.'],
+    },
+  },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
+);
+
+documentSchema.index({ owner: 1, category: 1 }, { unique: true });
+
+documentSchema.virtual('url').get(function () {
+  return `/documents/${this._id}`;
 });
 
-DocumentSchema.virtual('ownerData', {
-    ref: 'Owner',
-    localField: 'owner',
-    foreignField: '_id',
-    justOne: true,
-    autopopulate: { maxDepth: 1 },
+documentSchema.virtual('title').get(function () {
+  const categoryName = this.category?.name;
+  const ownerName = this.owner?.name;
+  if (categoryName && ownerName) return `${categoryName} — ${ownerName}`;
+  return categoryName || ownerName || 'Document';
 });
 
-DocumentSchema.virtual('categoryData', {
-    ref: 'Category',
-    localField: 'category',
-    foreignField: '_id',
-    justOne: true,
-    autopopulate: { select: 'name' },
-});
-
-DocumentSchema.virtual('name').get(function (){
-    return `${this.categoryData.name}-${this.ownerData.last_name}_${this.ownerData.first_name}`;
-})
-// Virtual for document's URL
-DocumentSchema.virtual("url").get(function () {
-    return `/document/${this._id}`;
-});
-
-// Apply the autopopulate plugin to the schema
-DocumentSchema.plugin(autopopulate);
-
-// Export model
-module.exports = mongoose.model("Document", DocumentSchema);
+module.exports = mongoose.model('Document', documentSchema);

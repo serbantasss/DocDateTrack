@@ -1,0 +1,36 @@
+//-
+  Add-document form. Locals: title, owners, categories, values { owner, category, notes },
+  errors (express-validator `.mapped()`).
+extends ../layout
+
+block content
+  -
+    var categoryOptions = categories.map(function (category) {
+      return { value: category._id, label: category.name + ' (' + (scopes[category.scope] || category.scope) + ')' };
+    });
+  +pageHeader({ title: 'Add document', subtitle: 'A document is one category of document for one owner, such as the passport of a family member.', icon: 'file-earmark-plus', breadcrumbs: [{ label: 'Documents', href: '/documents' }] })
+
+  .row
+    .col-lg-9.col-xl-7
+      if !owners.length || !categories.length
+        +alert('warning', { title: 'Add an owner and a category first' })
+          p.mb-2 Every document belongs to one owner and one category.
+          ul.mb-0
+            if !owners.length
+              li
+                a.alert-link(href='/owners/new') Add an owner
+            if !categories.length
+              li
+                a.alert-link(href='/categories/new') Add a category
+      else
+        .card.shadow-sm
+          .card-body.p-4
+            +errorSummary()
+            +form({ action: '/documents' })
+              .row.g-3.mb-3
+                +select({ name: 'owner', label: 'Owner', options: owners, valueKey: '_id', labelKey: 'name', placeholder: 'Choose an owner…', required: true, class: 'col-md-6' })
+                +select({ name: 'category', label: 'Category', options: categoryOptions, placeholder: 'Choose a category…', required: true, class: 'col-md-6' })
+              +textarea({ name: 'notes', label: 'Notes', rows: 3, maxlength: 2000, help: 'Optional, e.g. where the original is kept.' })
+              p.small.text-body-secondary.mb-0
+                | If this owner already has a document of this category, you are taken to it instead.
+              +submit('Add document', { icon: 'check-lg', cancel: '/documents' })

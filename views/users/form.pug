@@ -1,0 +1,52 @@
+//-
+  Add or edit a user (administrators only).
+  Locals: title, values { username (adding only), email, display_name, role },
+  errors (express-validator `.mapped()`), roles (User.ROLES), user (the account being
+  edited; null when adding), isSelf (editing your own account: your own password is
+  changed on the account page, which asks for the current password).
+extends ../layout
+include _mixins
+
+block content
+  -
+    var editing = Boolean(user);
+    var formAction = editing ? '/users/' + user._id : '/users';
+    var headerSubtitle = !editing
+      ? 'Create an account for someone who should be able to sign in.'
+      : user.last_login_at
+        ? 'Last sign-in: ' + fmt.dateTime(user.last_login_at)
+        : 'Has never signed in.';
+    var roleHelp = isSelf
+      ? 'If you make yourself a member, you can no longer manage users.'
+      : 'Members can manage owners, categories, documents and versions. Administrators can also manage users.';
+  +pageHeader({ title: title, subtitle: headerSubtitle, icon: editing ? 'person-gear' : 'person-plus', breadcrumbs: [{ label: 'Users', href: '/users' }] })
+    if editing && !isSelf
+      +deleteButton(formAction, { label: 'Delete user', confirm: 'Delete the user ' + user.username + '? They are signed out and can no longer sign in.' })
+
+  .row
+    .col-lg-9.col-xl-7
+      .card.shadow-sm
+        .card-body.p-4
+          +errorSummary()
+          +form({ action: formAction, method: editing ? 'PUT' : 'POST' })
+            if editing
+              +input({ name: 'username', label: 'Username', value: user.username, readonly: true, help: 'Usernames cannot be changed.' })(class='bg-body-tertiary' autocapitalize='none' spellcheck='false')
+            else
+              +input({ name: 'username', label: 'Username', autocomplete: 'off', minlength: 3, maxlength: 50, pattern: '[A-Za-z0-9._\\-]+', required: true, autofocus: true, help: '3–50 characters: letters, numbers, dots, hyphens and underscores.' })(autocapitalize='none' spellcheck='false')
+            +input({ name: 'email', type: 'email', label: 'Email', autocomplete: 'off', maxlength: 254, required: true, help: 'The user can sign in with the username or this email address.' })
+            +input({ name: 'display_name', label: 'Display name', autocomplete: 'off', maxlength: 100, help: 'Optional. Shown instead of the username.' })
+            +radios({ name: 'role', label: 'Role', options: roles, required: true, help: roleHelp })
+
+            if isSelf
+              +alert('info')(class='mt-4')
+                | To change your own password, go to your #[a.alert-link(href='/account') account page].
+            else if editing
+              fieldset.mt-4
+                legend.fs-6.fw-semibold.mb-3 Reset password
+                +input({ name: 'password', type: 'password', label: 'New password', autocomplete: 'new-password', minlength: 10, maxlength: 128, help: 'Leave blank to keep the current password. A new password signs the user out everywhere.' })
+                +input({ name: 'password_confirm', type: 'password', label: 'Confirm new password', autocomplete: 'new-password', minlength: 10, maxlength: 128 })
+            else
+              +input({ name: 'password', type: 'password', label: 'Password', autocomplete: 'new-password', minlength: 10, maxlength: 128, required: true, help: 'Use 10–128 characters and share it with the user in a safe way.' })
+              +input({ name: 'password_confirm', type: 'password', label: 'Confirm password', autocomplete: 'new-password', minlength: 10, maxlength: 128, required: true })
+
+            +submit(editing ? 'Save changes' : 'Create user', { icon: editing ? 'check-lg' : 'person-plus', cancel: '/users' })

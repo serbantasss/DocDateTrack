@@ -1,93 +1,181 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const http = require('http');
-const https = require('https');
+const fs = require('node:fs');
+const http = require('node:http');
+const https = require('node:https');
 const mongoose = require('mongoose');
 
-const mongoDB = process.env.MONGODB_URI;
-if (!mongoDB) {
-  throw new Error('MONGODB_URI must be set before starting the application');
-}
+const { createApp } = require('../app');
+const { ConfigError, loadConfig } = require('../config');
+const { startReminderScheduler, validateReminderCron } = require('../services/scheduler');
 
-if (!process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET must be set before starting the application');
-}
+const SHUTDOWN_TIMEOUT_MS = 10_000;
 
-const httpPort = normalizePort(process.env.PORT || '8080');
-const sslKeyPath = process.env.SSL_KEY_PATH;
-const sslCertPath = process.env.SSL_CERT_PATH;
+class StartupError extends Error {}
 
-if (Boolean(sslKeyPath) !== Boolean(sslCertPath)) {
-  throw new Error('Set both SSL_KEY_PATH and SSL_CERT_PATH to enable HTTPS');
-}
-
-async function start() {
-  const httpsOptions = sslKeyPath && sslCertPath ? {
-    key: fs.readFileSync(sslKeyPath),
-    cert: fs.readFileSync(sslCertPath),
-  } : null;
-
-  await mongoose.connect(mongoDB);
-
-  const app = require('../app');
-  app.set('port', httpPort);
-  const httpServer = http.createServer(app);
-  await listen(httpServer, httpPort);
-  httpServer.on('error', logServerError);
-  logListening(httpServer, 'HTTP');
-
-  if (httpsOptions) {
-    const httpsPort = normalizePort(process.env.PORT_HTTPS || '8443');
-    const httpsServer = https.createServer(httpsOptions, app);
-    try {
-      await listen(httpsServer, httpsPort);
-    } catch (error) {
-      await new Promise((resolve) => httpServer.close(resolve));
-      throw error;
-    }
-    httpsServer.on('error', logServerError);
-    logListening(httpsServer, 'HTTPS');
+function describeMongoUri(uri) {
+  try {
+    const url = new URL(uri);
+    return `${url.protocol}//${url.host}${url.pathname}`;
+  } catch {
+    return 'the configured MONGODB_URI';
   }
 }
 
-function normalizePort(value) {
-  const port = Number.parseInt(value, 10);
-  return Number.isNaN(port) ? value : port >= 0 ? port : false;
+function ensureUploadDir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.accessSync(dir, fs.constants.R_OK | fs.constants.W_OK);
+  } catch (error) {
+    throw new StartupError(`UPLOAD_DIR ${dir} is not a writable directory: ${error.message}`, {
+      cause: error,
+    });
+  }
 }
 
-function listen(server, port) {
+function readTlsFile(name, filePath) {
+  try {
+    return fs.readFileSync(filePath);
+  } catch (error) {
+    throw new StartupError(`Unable to read ${name} (${filePath}): ${error.message}`, {
+      cause: error,
+    });
+  }
+}
+
+function listen(server, port, protocol) {
   return new Promise((resolve, reject) => {
     const onError = (error) => {
       server.removeListener('listening', onListening);
-      reject(error);
+      if (error.code === 'EADDRINUSE') {
+        reject(new StartupError(`${protocol} port ${port} is already in use.`, { cause: error }));
+      } else if (error.code === 'EACCES') {
+        reject(
+          new StartupError(`${protocol} port ${port} requires elevated privileges.`, {
+            cause: error,
+          }),
+        );
+      } else {
+        reject(error);
+      }
     };
     const onListening = () => {
       server.removeListener('error', onError);
-      resolve();
+      server.on('error', (error) => console.error(`${protocol} server error:`, error));
+      console.info(`${protocol} server listening on port ${server.address().port}`);
+      resolve(server);
     };
-
     server.once('error', onError);
     server.once('listening', onListening);
     server.listen(port);
   });
 }
 
-function logListening(server, protocol) {
-  const address = server.address();
-  const bind = typeof address === 'string' ? address : `port ${address.port}`;
-  console.info(`${protocol} listening on ${bind}`);
-}
-
-function logServerError(error) {
-  console.error('Server error:', error);
-  process.exitCode = 1;
-}
-
-start().catch(async (error) => {
-  console.error('Unable to start DocDateTrack:', error);
-  await mongoose.disconnect().catch((disconnectError) => {
-    console.error('Unable to close MongoDB connection:', disconnectError);
+function closeServer(server) {
+  return new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+    server.closeIdleConnections();
   });
+}
+
+async function main() {
+  const config = loadConfig();
+  validateReminderCron(config.reminders.cron);
+  ensureUploadDir(config.uploads.dir);
+  const tlsOptions = config.https.enabled
+    ? {
+        key: readTlsFile('SSL_KEY_PATH', config.https.keyPath),
+        cert: readTlsFile('SSL_CERT_PATH', config.https.certPath),
+      }
+    : null;
+
+  try {
+    await mongoose.connect(config.mongodbUri, { serverSelectionTimeoutMS: 10_000 });
+  } catch (error) {
+    throw new StartupError(
+      `Unable to connect to MongoDB at ${describeMongoUri(config.mongodbUri)}: ${error.message}`,
+      { cause: error },
+    );
+  }
+
+  const servers = [];
+  // Cleanup functions run in reverse order on shutdown, before the servers close and MongoDB
+  // disconnects (e.g. stopping background jobs).
+  const cleanupTasks = [];
+  let shuttingDown = false;
+
+  async function shutdown(signal) {
+    if (shuttingDown) {
+      console.warn(`${signal} received again; exiting immediately.`);
+      process.exit(1);
+    }
+    shuttingDown = true;
+    console.info(`${signal} received; shutting down…`);
+    const forceExit = setTimeout(() => {
+      console.error(`Shutdown did not finish within ${SHUTDOWN_TIMEOUT_MS / 1000} s; exiting.`);
+      process.exit(1);
+    }, SHUTDOWN_TIMEOUT_MS);
+    forceExit.unref();
+
+    // Every step runs even when an earlier one fails, so the servers always stop and MongoDB is
+    // always disconnected.
+    const fail = (step, error) => {
+      console.error(`Error during shutdown (${step}):`, error);
+      process.exitCode = 1;
+    };
+    for (const cleanup of cleanupTasks.toReversed()) {
+      try {
+        await cleanup();
+      } catch (error) {
+        fail('stopping background jobs', error);
+      }
+    }
+    for (const result of await Promise.allSettled(servers.map(closeServer))) {
+      if (result.status === 'rejected') fail('closing the servers', result.reason);
+    }
+    try {
+      await mongoose.disconnect();
+    } catch (error) {
+      fail('disconnecting from MongoDB', error);
+    }
+    clearTimeout(forceExit);
+    if (process.exitCode) console.error('Shutdown finished with errors.');
+    else console.info('Shutdown complete.');
+    // Exit explicitly: a failed step may have left timers or sockets that would keep the process up.
+    process.exit(process.exitCode ?? 0);
+  }
+
+  const app = createApp({ config });
+  try {
+    servers.push(await listen(http.createServer(app), config.port, 'HTTP'));
+    if (tlsOptions) {
+      servers.push(await listen(https.createServer(tlsOptions, app), config.https.port, 'HTTPS'));
+    }
+  } catch (error) {
+    await Promise.allSettled(servers.map(closeServer));
+    throw error;
+  }
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  mongoose.connection.on('error', (error) => console.error('MongoDB error:', error.message));
+  mongoose.connection.on('disconnected', () => {
+    if (!shuttingDown) console.warn('Lost the connection to MongoDB; retrying…');
+  });
+  mongoose.connection.on('reconnected', () => console.info('Reconnected to MongoDB.'));
+
+  // Background jobs start once the servers accept connections; graceful shutdown stops them first.
+  const reminderScheduler = startReminderScheduler({ config });
+  if (reminderScheduler) cleanupTasks.push(() => reminderScheduler.stop());
+
+  console.info(`${config.appName} is ready at ${config.appUrl}`);
+}
+
+main().catch(async (error) => {
+  if (error instanceof ConfigError || error instanceof StartupError) {
+    console.error(`Unable to start: ${error.message}`);
+  } else {
+    console.error('Unable to start:', error);
+  }
+  await mongoose.disconnect().catch(() => {});
   process.exitCode = 1;
 });

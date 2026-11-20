@@ -1,0 +1,65 @@
+name: Feature request
+description: Suggest a new feature or an improvement for DocDateTrack.
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping to improve DocDateTrack! Please search the [existing issues](https://github.com/serbantasss/DocDateTrack/issues) first — someone may already have suggested the same idea.
+
+        DocDateTrack aims to stay a small, easy-to-run app for households and small organisations, so describing the problem behind your idea helps us find the solution that fits best.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what makes it difficult today?
+      placeholder: When I …, I have to …
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like DocDateTrack to solve it? Mock-ups and sketches are welcome (with made-up data).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or other approaches you have tried or thought about.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of DocDateTrack is this mainly about?
+      options:
+        - Dashboard and document status
+        - Documents and versions
+        - Owners and categories
+        - Email reminders
+        - Users, accounts and sign-in
+        - Deployment and configuration
+        - Documentation
+        - Something else
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that helps to explain the request, such as links or examples from other tools.
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Would you like to help?
+      options:
+        - I would like to work on a pull request for this
+        - I can help with testing and feedback
+        - Not at the moment
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues, and this has not been requested yet.
+          required: true

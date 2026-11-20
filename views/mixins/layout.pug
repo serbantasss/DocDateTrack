@@ -1,0 +1,71 @@
+//-
+  views/mixins/layout.pug — layout chrome used by the layouts and partials
+  ==========================================================================
+  Not intended for page templates (see forms.pug and ui.pug instead).
+
+  +navLink(href, label, icon)
+    Navbar item; active (with aria-current="page") when `currentPath` is
+    `href` or below it. '/' is only active on the dashboard itself.
+    Example:  +navLink('/owners', 'Owners', 'people')
+
+  +menuLink(href, label, icon)
+    Dropdown item with the same active-state rule.
+    Example:  +menuLink('/account', 'Account', 'person-gear')
+
+  +themeToggle(opts)
+    Light / dark / auto colour-mode dropdown, wired up by public/js/color-modes.js.
+    opts.nav  boolean — render as a navbar item (li.nav-item) instead of a small button
+    Example:  +themeToggle({ nav: true })
+
+mixin navLink(href, label, icon)
+  -
+    var navPath = currentPath || '';
+    var navActive = href === '/' ? navPath === '/' : navPath === href || navPath.indexOf(href + '/') === 0;
+  li.nav-item
+    a.nav-link.d-flex.align-items-center.gap-2(href=href class=(navActive ? 'active' : null) aria-current=(navActive ? 'page' : null))
+      if icon
+        +icon(icon)
+      = label
+
+mixin menuLink(href, label, icon)
+  -
+    var menuPath = currentPath || '';
+    var menuActive = menuPath === href || menuPath.indexOf(href + '/') === 0;
+  li
+    a.dropdown-item.d-flex.align-items-center.gap-2(href=href class=(menuActive ? 'active' : null) aria-current=(menuActive ? 'page' : null))
+      if icon
+        +icon(icon)
+      = label
+
+mixin themeToggle(opts)
+  -
+    var toggleOpts = opts || {};
+    var themeChoices = [
+      { value: 'light', label: 'Light', icon: 'bi-sun-fill' },
+      { value: 'dark', label: 'Dark', icon: 'bi-moon-stars-fill' },
+      { value: 'auto', label: 'Auto', icon: 'bi-circle-half' },
+    ];
+  #{toggleOpts.nav ? 'li' : 'div'}(class=(toggleOpts.nav ? 'nav-item dropdown' : 'dropdown') data-theme-switcher)
+    button(
+      type='button'
+      class=(toggleOpts.nav ? 'nav-link dropdown-toggle d-flex align-items-center gap-2' : 'btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2')
+      data-bs-toggle='dropdown'
+      aria-expanded='false'
+      aria-label='Toggle theme (auto)'
+      data-theme-toggle
+    )
+      i.bi.bi-circle-half.theme-icon-active(aria-hidden='true')
+      if toggleOpts.nav
+        span.d-lg-none Theme
+    ul.dropdown-menu.dropdown-menu-end
+      each choice in themeChoices
+        li
+          button.dropdown-item.d-flex.align-items-center.gap-2(
+            type='button'
+            data-bs-theme-value=choice.value
+            data-theme-icon=choice.icon
+            aria-pressed='false'
+          )
+            i.bi.opacity-75(class=choice.icon aria-hidden='true')
+            = choice.label
+            i.bi.bi-check2.ms-auto.theme-check(aria-hidden='true')

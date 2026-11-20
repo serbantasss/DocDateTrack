@@ -1,0 +1,11 @@
+# Generated, vendored or user data
+package-lock.json
+coverage/
+uploads/
+public/css/
+**/*.min.js
+**/*.min.css
+**/*.map
+
+# Pug templates are not supported by Prettier
+*.pug

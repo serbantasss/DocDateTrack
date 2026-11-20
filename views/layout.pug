@@ -1,176 +1,33 @@
+//-
+  Main layout (signed-in pages; also used by error.pug for anonymous visitors).
+  Blocks: `content` (page body, rendered below the flash messages),
+          `styles` (extra <link rel="stylesheet"> tags in <head>),
+          `scripts` (extra script(src=…) tags after Bootstrap and app.js; no inline JS).
+  Locals: title, appName, currentUser, isAdmin, currentPath, csrfToken, messages.
+  The navbar is shown only when `currentUser` is set.
+
+  Page templates (`extends layout`, or `extends ../layout` from a sub-folder):
+  - Only named blocks, mixin definitions and includes of mixin-only files may appear at the
+    top level; put page code (`- var rows = …`) inside `block content`.
+  - Do not declare variables named like a layout or mixin local (currentPath, currentUser,
+    isAdmin, appName, title, messages, csrfToken, values, errors, fmt, statusMeta, scopes):
+    e.g. a page-level `const currentPath` breaks the navbar, which renders before the content.
 doctype html
-html.h-100(lang='en', data-bs-theme='')
-    head
-        script(src="/js/color-modes.js")
-        meta(charset='utf-8')
-        meta(name='viewport', content='width=device-width, initial-scale=1')
-        meta(name='description', content='')
-        meta(name='author', content='Bantas Serban')
-        meta(name='generator', content='Hugo 0.112.5')
-        title #{title} &middot; DocTrack
-        //link(rel='canonical', href='https://getbootstrap.com/docs/5.3/examples/sticky-footer-navbar/')
-        //Bootstrap CSS
-        link(href='/css/bootstrap.min.css', rel='stylesheet')
-        //Bootstrap icons
-        link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css')
-        // Custom styles for this template
-        style.
-            .bd-placeholder-img {
-                font-size: 1.125rem;
-                text-anchor: middle;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                user-select: none;
-            }
-
-            @media (min-width: 768px) {
-                .bd-placeholder-img-lg {
-                    font-size: 3.5rem;
-                }
-            }
-
-            .b-example-divider {
-                width: 100%;
-                height: 3rem;
-                background-color: rgba(0, 0, 0, .1);
-                border: solid rgba(0, 0, 0, .15);
-                border-width: 1px 0;
-                box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
-            }
-
-            .b-example-vr {
-                flex-shrink: 0;
-                width: 1.5rem;
-                height: 100vh;
-            }
-
-            .bi {
-                vertical-align: -.125em;
-                fill: currentColor;
-            }
-
-            .nav-scroller {
-                position: relative;
-                z-index: 2;
-                height: 2.75rem;
-                overflow-y: hidden;
-            }
-
-            .nav-scroller .nav {
-                display: flex;
-                flex-wrap: nowrap;
-                padding-bottom: 1rem;
-                margin-top: -1px;
-                overflow-x: auto;
-                text-align: center;
-                white-space: nowrap;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .btn-bd-primary {
-                --bd-violet-bg: #712cf9;
-                --bd-violet-rgb: 112.520718, 44.062154, 249.437846;
-                --bs-btn-font-weight: 600;
-                --bs-btn-color: var(--bs-white);
-                --bs-btn-bg: var(--bd-violet-bg);
-                --bs-btn-border-color: var(--bd-violet-bg);
-                --bs-btn-hover-color: var(--bs-white);
-                --bs-btn-hover-bg: #6528e0;
-                --bs-btn-hover-border-color: #6528e0;
-                --bs-btn-focus-shadow-rgb: var(--bd-violet-rgb);
-                --bs-btn-active-color: var(--bs-btn-hover-color);
-                --bs-btn-active-bg: #5a23c8;
-                --bs-btn-active-border-color: #5a23c8;
-            }
-
-            .bd-mode-toggle {
-                z-index: 1500;
-            }
-        link(href='/stylesheets/sticky-footer-navbar.css', rel='stylesheet')
-    body.d-flex.flex-column.h-100
-        div
-            //.dropdown.position-fixed.bottom-0.end-0.mb-3.me-3.bd-mode-toggle
-            //    button#bd-theme.btn.btn-bd-primary.py-2.dropdown-toggle.d-flex.align-items-center(type='button', aria-expanded='false', data-bs-toggle='dropdown', aria-label='Toggle theme (auto)')
-            //        i.bi.my-1.theme-icon-active(width='1em', height='1em' class='')
-            //            use(href='#circle-half')
-            //        span#bd-theme-text.visually-hidden Toggle theme
-            //    ul.dropdown-menu.dropdown-menu-end.shadow(aria-labelledby='bd-theme-text', style='')
-            //        li
-            //            button.dropdown-item.d-flex.align-items-center(type='button', data-bs-theme-value='light', aria-pressed='false')
-            //                i.bi.bi-sun-fill.me-2.opacity-50.theme-icon(width='1em', height='1em')
-            //                | Light
-            //        li
-            //            button.dropdown-item.d-flex.align-items-center(type='button', data-bs-theme-value='dark', aria-pressed='false')
-            //                i.bi.bi-moon-stars-fill.me-2.opacity-50.theme-icon(width='1em', height='1em')
-            //                | Dark
-            //
-            //        li
-            //            button.dropdown-item.d-flex.align-items-center.active(type='button', data-bs-theme-value='auto', aria-pressed='true')
-            //                i.bi.bi-circle-half.me-2.opacity-50.theme-icon(width='1em', height='1em')
-            //                | Auto
-            //.dropdown.position-fixed.bottom-0.end-0.mb-3.me-3.bd-mode-toggle
-            //    button#bd-theme.btn.btn-bd-primary.py-2.dropdown-toggle.d-flex.align-items-center(type='button', aria-expanded='false', data-bs-toggle='dropdown', aria-label='Toggle theme (auto)')
-            //        i#circle-half.bi.bi-circle-half.theme-icon-active(width='1em', height='1em')
-            //        span#bd-theme-text.visually-hidden Toggle theme
-            //    ul.dropdown-menu.dropdown-menu-end.shadow(aria-labelledby='bd-theme-text')
-            //        li
-            //            button.dropdown-item.d-flex.align-items-center(type='button', data-bs-theme-value='light', aria-pressed='false')
-            //                i.bi.bi-sun-fill.me-2.opacity-50.theme-icon(width='1em', height='1em')
-            //                | Light
-            //                i.bi.bi-check2.ms-auto.d-none(width='1em', height='1em')
-            //        li
-            //            button.dropdown-item.d-flex.align-items-center(type='button', data-bs-theme-value='dark', aria-pressed='false')
-            //                i.bi.bi-moon-stars-fill.me-2.opacity-50.theme-icon(width='1em', height='1em')
-            //                | Dark
-            //                i.bi.bi-check2.ms-auto.d-none(width='1em', height='1em')
-            //        li
-            //            button.dropdown-item.d-flex.align-items-center.active(type='button', data-bs-theme-value='auto', aria-pressed='true')
-            //                i.bi.bi-circle-half.me-2.opacity-50.theme-icon(width='1em', height='1em')
-            //                | Auto
-            //                i.bi.bi-check2.ms-auto.d-none(width='1em', height='1em')
-        header
-            // Fixed navbar
-            nav.navbar.navbar-expand-md.navbar-dark.fixed-top.bg-dark
-                .container-fluid
-                    a.navbar-brand(href='#') DocTrack
-                    button.navbar-toggler(type='button', data-bs-toggle='collapse', data-bs-target='#navbarCollapse', aria-controls='navbarCollapse', aria-expanded='false', aria-label='Toggle navigation')
-                        span.navbar-toggler-icon
-                    #navbarCollapse.collapse.navbar-collapse
-                        ul.navbar-nav.me-auto.mb-2.mb-md-0
-                            li.nav-item
-                                a.nav-link(class=(currPage == "home" ? 'active' : ""), href='/')
-                                    | Home
-                            li.nav-item.dropdown
-                                a.nav-link.dropdown-toggle(class= (currPage == "documents" ? "active" : ""), href='#',role='button' data-bs-toggle='dropdown') Documents
-                                ul.dropdown-menu
-                                    a.dropdown-item(href='/documents') List all Types
-                                    a.dropdown-item(href='/document_instances') List all Document
-                                    a.dropdown-item(href='/document/create') Add new Type
-                                    a.dropdown-item(href='/document_instance/create') Update Document
-                            li.nav-item.dropdown
-                                a.nav-link.dropdown-toggle(class=(currPage == "owners" ? "active" : ""), href='#', data-bs-toggle='dropdown', aria-expanded='false') Owners
-                                ul.dropdown-menu
-                                    a.dropdown-item(href='/owners') List All
-                                    a.dropdown-item(href='/owner/create') Add New
-                            li.nav-item.dropdown
-                                a.nav-link.dropdown-toggle(class= ( currPage == "categories" ? "active" : ""), href='#', data-bs-toggle='dropdown', aria-expanded='false') Categories
-                                ul.dropdown-menu
-                                    a.dropdown-item(href='/categories') List All
-                                    a.dropdown-item(href='/category/create') Create New
-                            li.nav-item
-                                a.nav-link.disabled(href='/') About
-                        form.d-flex(role='search')
-                            input.form-control.me-2(type='search', placeholder='Search', aria-label='Search')
-                            button.btn.btn-outline-success.disabled(type='submit') Search
-                        button.btn.btn-success.d-flex.ms-2(onclick="functionName()")
-                            | CHECK
-                            i.bi.bi-box-arrow-up-right.ms-1
-
-        // Begin page content
-        main.flex-shrink-0
-            .container
-                block content
-        footer.footer.mt-auto.py-3.bg-body-tertiary
-            .container
-                span.text-body-secondary Place sticky footer content here.
-        script(src='/js/bootstrap.bundle.min.js')
+include mixins/forms
+include mixins/ui
+include mixins/layout
+html(lang='en' data-bs-theme='light')
+  head
+    include partials/head
+    block styles
+  body.d-flex.flex-column.min-vh-100
+    a.skip-link.btn.btn-primary.visually-hidden-focusable(href='#main-content') Skip to main content
+    if currentUser
+      include partials/navbar
+    main#main-content.flex-grow-1.py-4(tabindex='-1')
+      .container
+        include partials/flash
+        block content
+    include partials/footer
+    include partials/scripts
+    block scripts

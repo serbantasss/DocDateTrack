@@ -1,0 +1,71 @@
+/*
+ * DocDateTrack — small additions on top of Bootstrap 5.3.
+ * Prefer Bootstrap utility classes in templates; only add rules here that utilities cannot express.
+ * Use Bootstrap CSS variables so everything works in both the light and the dark colour mode.
+ */
+
+/* Skip link: hidden until focused, then pinned to the top-left corner. */
+.skip-link:focus {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1090;
+}
+
+/* <main> receives focus from the skip link; it does not need a focus ring. */
+main[tabindex='-1']:focus {
+  outline: 0;
+}
+
+/* Theme toggle: show a check mark next to the active colour mode. */
+.theme-check {
+  visibility: hidden;
+}
+
+[data-bs-theme-value].active .theme-check {
+  visibility: visible;
+}
+
+/* Tables placed directly inside cards: no bottom margin, padding aligned with the card body. */
+.card > .table,
+.card > .table-responsive > .table {
+  margin-bottom: 0;
+}
+
+.card > .table > :not(caption) > * > :first-child,
+.card > .table-responsive > .table > :not(caption) > * > :first-child {
+  padding-inline-start: var(--bs-card-spacer-x);
+}
+
+.card > .table > :not(caption) > * > :last-child,
+.card > .table-responsive > .table > :not(caption) > * > :last-child {
+  padding-inline-end: var(--bs-card-spacer-x);
+}
+
+.card > .table > tbody > tr:last-child > *,
+.card > .table-responsive > .table > tbody > tr:last-child > * {
+  border-bottom-width: 0;
+}
+
+.table > thead th {
+  white-space: nowrap;
+}
+
+/* Action column: as narrow as its buttons, which stay on one line. */
+.table-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.empty-state {
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+.error-stack {
+  max-height: 28rem;
+  overflow: auto;
+  font-size: 0.8125rem;
+  text-align: start;
+  white-space: pre;
+}

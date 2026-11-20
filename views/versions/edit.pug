@@ -1,0 +1,41 @@
+//-
+  Edit-version form. Locals: title, version, document (populated, or null when it is missing),
+  values { issued_at, expires_at, notes, remove_file }, errors, formError (message shown when
+  the version was changed by someone else meanwhile, else null), upload (see
+  views/versions/_fields.pug).
+extends ../layout
+include ../mixins/documents
+include _fields
+
+block content
+  -
+    var crumbs = document
+      ? [{ label: 'Documents', href: '/documents' }, { label: document.title, href: document.url }]
+      : [{ label: 'Versions', href: '/versions' }];
+    var cancelUrl = document ? document.url + '#version-' + version._id : '/versions';
+    var hasFile = Boolean(version.file && version.file.stored_name);
+    var deleteConfirm = 'Delete this version?' + (hasFile ? ' Its uploaded file is deleted too.' : '') + ' This cannot be undone.';
+  +pageHeader({ title: 'Edit version', subtitle: document ? document.title : 'Unknown document', icon: 'pencil-square', breadcrumbs: crumbs })
+    +deleteButton(version.url, { confirm: deleteConfirm, label: 'Delete version' })
+
+  .row
+    .col-lg-9.col-xl-7
+      .card.shadow-sm
+        .card-body.p-4
+          if formError
+            +alert('error', { title: formError })(data-form-error)
+              a.alert-link(href=(version.url + '/edit')) Reload the current version
+          +errorSummary()
+          +form({ action: version.url, method: 'PUT', multipart: true })
+            +versionFields()
+            .mb-3
+              .form-label.mb-1 Current file
+              div
+                +versionFile(version)(class='text-break')
+            if hasFile
+              +checkbox({ name: 'remove_file', label: 'Remove the current file', help: 'Ignored when you choose a new file below.' })
+            +versionFileField(upload, { label: hasFile ? 'Replace the file' : 'File', help: hasFile ? 'Choose a file to replace the current one.' : null })
+            +submit('Save changes', { icon: 'check-lg', cancel: cancelUrl })
+
+block scripts
+  script(src='/js/uploads.js')

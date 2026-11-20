@@ -1,0 +1,12 @@
+meta(charset='utf-8')
+meta(name='viewport' content='width=device-width, initial-scale=1')
+meta(name='robots' content='noindex, nofollow')
+meta(name='csrf-token' content=(csrfToken || ''))
+title= (title ? title + ' · ' : '') + (appName || 'DocDateTrack')
+link(rel='icon' href='/favicon.svg' type='image/svg+xml')
+link(rel='apple-touch-icon' href='/apple-touch-icon.png')
+//- Applies the stored colour mode before the first paint, so it must stay in <head>.
+script(src='/js/color-modes.js')
+link(rel='stylesheet' href='/vendor/bootstrap/css/bootstrap.min.css')
+link(rel='stylesheet' href='/vendor/bootstrap-icons/bootstrap-icons.min.css')
+link(rel='stylesheet' href='/stylesheets/app.css')

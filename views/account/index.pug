@@ -1,0 +1,57 @@
+//-
+  Account page of the signed-in user: profile form, password change and account details.
+  Locals: title, account (the signed-in user), values { email, display_name } for the profile
+  form, errors (express-validator `.mapped()`) of the form named by failedForm
+  ('profile' | 'password' | null), roles (User.ROLES).
+extends ../layout
+include ../users/_mixins
+
+block content
+  +pageHeader({ title: title, icon: 'person-gear', subtitle: 'Your profile, password and sign-in details.' })
+
+  .row.g-4
+    .col-lg-8
+      section.card.shadow-sm.mb-4(aria-labelledby='profile-heading')
+        .card-body.p-4
+          h2#profile-heading.h5.mb-3 Profile
+          if failedForm === 'profile'
+            +errorSummary()
+          +form({ action: '/account' })
+            +input({ name: 'username', label: 'Username', value: account.username, readonly: true, help: 'Your username cannot be changed.' })(class='bg-body-tertiary' autocapitalize='none' spellcheck='false')
+            +input({ name: 'email', type: 'email', label: 'Email', autocomplete: 'email', maxlength: 254, required: true, help: 'You can sign in with your username or this email address.' })
+            +input({ name: 'display_name', label: 'Display name', autocomplete: 'name', maxlength: 100, help: 'Optional. Shown instead of your username.' })
+            +submit('Save profile', { icon: 'check-lg' })
+
+      section.card.shadow-sm(aria-labelledby='password-heading')
+        .card-body.p-4
+          h2#password-heading.h5.mb-1 Change password
+          p.text-body-secondary.mb-3 Changing your password signs you out on all your other devices.
+          if failedForm === 'password'
+            +errorSummary()
+          +form({ action: '/account/password' })
+            //- Tells password managers which account the new password belongs to.
+            input(type='text' name='username' value=account.username autocomplete='username' hidden)
+            +input({ name: 'current_password', type: 'password', label: 'Current password', autocomplete: 'current-password', required: true })
+            +input({ name: 'new_password', type: 'password', label: 'New password', autocomplete: 'new-password', minlength: 10, maxlength: 128, required: true, help: 'Use 10–128 characters. A long passphrase is easiest to remember.' })
+            +input({ name: 'new_password_confirm', type: 'password', label: 'Confirm new password', autocomplete: 'new-password', minlength: 10, maxlength: 128, required: true })
+            +submit('Change password', { icon: 'key' })
+
+    .col-lg-4
+      section.card.shadow-sm(aria-labelledby='details-heading')
+        .card-body.p-4
+          h2#details-heading.h5.mb-3 Account details
+          dl.mb-0
+            dt.small.fw-normal.text-body-secondary Role
+            dd.mb-3
+              +roleBadge(account.role)
+            dt.small.fw-normal.text-body-secondary Last sign-in
+            dd.mb-3
+              +timestamp(account.last_login_at, 'Never')
+            dt.small.fw-normal.text-body-secondary Member since
+            dd.mb-0
+              +timestamp(account.createdAt)
+          if account.role === 'admin'
+            hr
+            a.d-inline-flex.align-items-center.gap-2(href='/users')
+              +icon('people')
+              | Manage users

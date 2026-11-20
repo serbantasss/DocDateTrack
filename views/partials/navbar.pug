@@ -1,0 +1,57 @@
+header
+  nav.navbar.navbar-expand-lg.bg-body-tertiary.border-bottom(aria-label='Main')
+    .container
+      a.navbar-brand.d-flex.align-items-center.gap-2.fw-semibold(href='/')
+        img(src='/images/logo.svg' alt='' width='28' height='28')
+        span= appName || 'DocDateTrack'
+      button.navbar-toggler(
+        type='button'
+        data-bs-toggle='collapse'
+        data-bs-target='#primary-nav'
+        aria-controls='primary-nav'
+        aria-expanded='false'
+        aria-label='Toggle navigation'
+      )
+        span.navbar-toggler-icon
+      #primary-nav.collapse.navbar-collapse
+        ul.navbar-nav.me-auto.mb-2.mb-lg-0
+          +navLink('/', 'Dashboard', 'speedometer2')
+          +navLink('/documents', 'Documents', 'files')
+          +navLink('/versions', 'Versions', 'clock-history')
+          +navLink('/owners', 'Owners', 'person-vcard')
+          +navLink('/categories', 'Categories', 'tags')
+        ul.navbar-nav.align-items-lg-center.gap-lg-2
+          li.nav-item.dropdown.py-2.py-lg-0
+            button.btn.btn-primary.btn-sm.dropdown-toggle(type='button' data-bs-toggle='dropdown' aria-expanded='false')
+              +icon('plus-lg')(class='me-1')
+              | New
+            ul.dropdown-menu.dropdown-menu-end
+              +menuLink('/versions/new', 'Upload version', 'cloud-arrow-up')
+              +menuLink('/documents/new', 'Add document', 'file-earmark-plus')
+              +menuLink('/owners/new', 'Add owner', 'person-plus')
+              +menuLink('/categories/new', 'Add category', 'tag')
+          +themeToggle({ nav: true })
+          li.nav-item.dropdown
+            button.nav-link.dropdown-toggle.d-flex.align-items-center.gap-2(type='button' data-bs-toggle='dropdown' aria-expanded='false')
+              +icon('person-circle')
+              span= currentUser.name || currentUser.display_name || currentUser.username
+            ul.dropdown-menu.dropdown-menu-end
+              li
+                .dropdown-header
+                  | Signed in as
+                  strong.d-block.text-body-emphasis.text-break= currentUser.username
+                  if isAdmin || currentUser.role === 'admin'
+                    span.badge.text-bg-primary.mt-1 Administrator
+              li
+                hr.dropdown-divider
+              +menuLink('/account', 'Account', 'person-gear')
+              if isAdmin || currentUser.role === 'admin'
+                +menuLink('/users', 'Users', 'people')
+              li
+                hr.dropdown-divider
+              li
+                form(method='post' action='/logout')
+                  +csrf()
+                  button.dropdown-item.d-flex.align-items-center.gap-2(type='submit')
+                    +icon('box-arrow-right')
+                    | Sign out

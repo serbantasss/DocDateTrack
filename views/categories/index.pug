@@ -1,0 +1,55 @@
+//-
+  Categories list. Locals: title, categories (sorted by name), activeScope ('' or a key of
+  `scopes`), scopeCounts ({ scope: number of categories }), totalCategories, documentCounts
+  ({ categoryId: number of documents }).
+extends ../layout
+
+block content
+  +pageHeader({ title: 'Categories', icon: 'tags', subtitle: 'The types of documents you track, such as passports, licences or certificates.' })
+    +linkButton(activeScope ? `/categories/new?scope=${activeScope}` : '/categories/new', 'Add category', { icon: 'tag', variant: 'primary' })
+
+  if totalCategories === 0
+    +emptyState({ icon: 'tags', title: 'No categories yet', message: 'Categories are document types, for example “Passport” or “Fire safety certificate”. Add one before adding documents.', action: { href: '/categories/new', label: 'Add category', icon: 'tag' } })
+  else
+    nav(aria-label='Filter by scope')
+      ul.nav.nav-pills.flex-wrap.gap-1.mb-3
+        li.nav-item
+          a.nav-link.d-flex.align-items-center.gap-2(href='/categories' class=(activeScope ? null : 'active') aria-current=(activeScope ? null : 'page'))
+            | All
+            span.badge.rounded-pill(class=(activeScope ? 'text-bg-secondary' : 'text-bg-light'))= totalCategories
+        each scopeLabel, scopeKey in scopes
+          - var scopeActive = activeScope === scopeKey
+          li.nav-item
+            a.nav-link.d-flex.align-items-center.gap-2(href=`/categories?scope=${scopeKey}` class=(scopeActive ? 'active' : null) aria-current=(scopeActive ? 'page' : null))
+              = scopeLabel
+              span.badge.rounded-pill(class=(scopeActive ? 'text-bg-light' : 'text-bg-secondary'))= scopeCounts[scopeKey] || 0
+
+    if categories.length === 0
+      +emptyState({ icon: 'tags', title: `No ${scopes[activeScope].toLowerCase()} categories`, message: 'No category uses this scope yet.', action: { href: `/categories/new?scope=${activeScope}`, label: 'Add category', icon: 'tag' } })
+        p.mt-3.mb-0
+          a(href='/categories') Show all categories
+    else
+      .card
+        .table-responsive
+          table.table.table-hover.align-middle
+            caption.visually-hidden Categories
+            thead
+              tr
+                th(scope='col') Name
+                th(scope='col') Scope
+                th.d-none.d-md-table-cell(scope='col') Description
+                th.text-end(scope='col') Documents
+                th.table-actions(scope='col')
+                  span.visually-hidden Actions
+            tbody
+              each category in categories
+                tr
+                  td
+                    a.fw-semibold.text-decoration-none(href=category.url)= category.name
+                  td
+                    +scopeBadge(category.scope)
+                  td.d-none.d-md-table-cell.small.text-body-secondary.text-break
+                    = category.description || '—'
+                  td.text-end= documentCounts[String(category._id)] || 0
+                  td.table-actions
+                    +linkButton(`${category.url}/edit`, `Edit ${category.name}`, { icon: 'pencil-square', iconOnly: true, size: 'sm' })

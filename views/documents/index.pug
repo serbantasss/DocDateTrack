@@ -1,0 +1,60 @@
+//-
+  Documents list. Locals: title, rows (current page, most urgent first), pagination,
+  statusLinks [{ status, label, count, url, active }], statusOptions [{ value, label }],
+  owners, categories, values (active filters: owner, category, scope, status, q),
+  hasFilters, hasDocuments.
+extends ../layout
+include ../mixins/documents
+
+block content
+  +pageHeader({ title: 'Documents', subtitle: 'Every document you track, most urgent first.', icon: 'files' })
+    +linkButton('/versions/new', 'Upload version', { icon: 'cloud-arrow-up' })
+    +linkButton('/documents/new', 'Add document', { icon: 'file-earmark-plus', variant: 'primary' })
+
+  if !hasDocuments
+    .card.shadow-sm
+      .card-body
+        +emptyState({ icon: 'files', title: 'No documents yet', message: 'A document is one category of document for one owner, such as the passport of a family member. Upload its first version to start tracking the expiry date.', action: { href: '/versions/new', label: 'Upload first version', icon: 'cloud-arrow-up' } })
+          p.small.text-body-secondary.mt-3.mb-0
+            | Or #[a(href='/documents/new') add a document] without a version.
+  else
+    .card.shadow-sm.mb-3
+      .card-body
+        +form({ action: '/documents', method: 'GET', class: 'row g-2 align-items-end' })(role='search' aria-label='Filter documents')
+          +select({ name: 'owner', label: 'Owner', options: owners, valueKey: '_id', labelKey: 'name', placeholder: 'All owners', size: 'sm', class: 'col-sm-6 col-lg' })(data-autosubmit)
+          +select({ name: 'category', label: 'Category', options: categories, valueKey: '_id', labelKey: 'name', placeholder: 'All categories', size: 'sm', class: 'col-sm-6 col-lg' })(data-autosubmit)
+          +select({ name: 'scope', label: 'Scope', options: scopes, placeholder: 'All scopes', size: 'sm', class: 'col-sm-6 col-lg' })(data-autosubmit)
+          +select({ name: 'status', label: 'Status', options: statusOptions, placeholder: 'All statuses', size: 'sm', class: 'col-sm-6 col-lg' })(data-autosubmit)
+          +input({ name: 'q', type: 'search', label: 'Search', placeholder: 'Owner or category name', maxlength: 100, size: 'sm', class: 'col-sm-8 col-lg-3' })
+          .col-sm-4.col-lg-auto.d-flex.gap-2
+            button.btn.btn-sm.btn-primary(type='submit')
+              +icon('funnel')(class='me-1')
+              | Filter
+            if hasFilters
+              a.btn.btn-sm.btn-outline-secondary(href='/documents')
+                +icon('x-lg')(class='me-1')
+                | Clear
+
+    nav.mb-3(aria-label='Filter by status')
+      ul.nav.nav-pills.flex-wrap.gap-1.small
+        each link in statusLinks
+          - var linkMeta = link.status ? statusMeta[link.status] : null;
+          li.nav-item
+            a.nav-link.d-flex.align-items-center.gap-2.py-1(href=link.url class=(link.active ? 'active' : null) aria-current=(link.active ? 'page' : null) data-status-filter=(link.status || 'all'))
+              if linkMeta
+                +icon(linkMeta.icon)
+              = link.label
+              span.badge.rounded-pill(class=(link.active ? 'text-bg-light' : 'text-bg-secondary'))= link.count
+
+    if rows.length
+      .card.shadow-sm
+        +documentsTable(rows, { caption: 'Documents' })
+      .d-flex.flex-wrap.align-items-center.justify-content-between.gap-3.mt-3
+        p.small.text-body-secondary.mb-0
+          | Showing #{pagination.from}–#{pagination.to} of #{pagination.total}
+          = pagination.total === 1 ? ' document' : ' documents'
+        +pagination(pagination, { label: 'Pages of documents' })
+    else
+      .card.shadow-sm
+        .card-body
+          +emptyState({ icon: 'search', title: 'No documents match these filters', message: 'Change the filters or clear them to see every document.', action: { href: '/documents', label: 'Clear filters', icon: 'x-lg' } })

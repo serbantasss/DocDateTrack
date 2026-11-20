@@ -1,17 +1,36 @@
 const mongoose = require('mongoose');
 
-const Schema = mongoose.Schema;
+const SCOPES = Object.freeze({ personal: 'Personal', company: 'Company', employee: 'Employee' });
 
-const CategorySchema = new Schema({
-    name: { type: String, require:true },
-    relation: {
-        type: String,
-        enum: ["DPF", "DF", "DP"],
+const categorySchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'The name is required.'],
+      unique: true,
+      trim: true,
+      maxlength: [100, 'The name must be at most 100 characters long.'],
     },
+    scope: {
+      type: String,
+      required: [true, 'The scope is required.'],
+      enum: { values: Object.keys(SCOPES), message: 'Choose a valid scope.' },
+      default: 'personal',
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'The description must be at most 500 characters long.'],
+    },
+  },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
+);
+
+categorySchema.virtual('url').get(function () {
+  return `/categories/${this._id}`;
 });
 
-CategorySchema.virtual("url").get(function(){
-    return `/category/${this._id}`
-});
+const Category = mongoose.model('Category', categorySchema);
+Category.SCOPES = SCOPES;
 
-module.exports = mongoose.model("Category", CategorySchema);
+module.exports = Category;

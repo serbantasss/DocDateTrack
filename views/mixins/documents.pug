@@ -1,0 +1,140 @@
+//-
+  views/mixins/documents.pug — shared document widgets (owner: domain-records agent;
+  domain-directory uses +documentsTable on the owner and category detail pages, so keep the
+  signature stable). Mixin definitions only; include it from a page:  include ../mixins/documents
+
+  +documentsTable(rows, opts)  — documents with their current expiry and computed status
+    rows               rows from services/documents.findDocumentsWithStatus(), usually passed
+                       through sortByUrgency(); render +emptyState instead when rows is empty
+    opts.showOwner     default true — show the owner (set false on an owner's page)
+    opts.showCategory  default true — show the category (set false on a category's page)
+    opts.showScope     default true — scope badge column
+    opts.caption       visually hidden table caption
+    Example:  +documentsTable(rows, { showOwner: false, caption: `Documents of ${owner.name}` })
+
+  +pagination(pager, opts)  — Bootstrap pagination; renders nothing when there is one page
+    pager       result of services/pagination.paginate()
+    opts.label  accessible name of the <nav> (default 'Pagination')
+    Example:  +pagination(pagination, { label: 'Pages of documents' })
+
+  +versionFile(version)  — download link (file-type icon, original name, size) or "No file"
+    version  a DocumentInstance (uses version.file and version.download_url)
+    Attributes go to the wrapper; add class 'text-break' outside scrollable tables.
+    Example:  +versionFile(row.currentVersion)(class='text-break')
+
+  +expiry(date, days)  — calendar date with the relative wording below it ("in 5 days")
+    date  expires_at (UTC midnight); days  daysUntil() of that date, or null
+    Example:  +expiry(version.expires_at, item.daysUntil)
+
+  +multiline(text)  — text whose line breaks are kept (rendered as <br>)
+    Example:  p.mb-0
+                +multiline(document.notes)
+
+mixin documentsTable(rows, opts)
+  -
+    var tableOpts = opts || {};
+    var showOwner = tableOpts.showOwner !== false;
+    var showCategory = tableOpts.showCategory !== false;
+    var showScope = tableOpts.showScope !== false;
+  .table-responsive&attributes(attributes)
+    table.table.table-hover.align-middle.mb-0
+      if tableOpts.caption
+        caption.visually-hidden= tableOpts.caption
+      thead
+        tr
+          th(scope='col') Document
+          if showScope
+            th(scope='col') Scope
+          th(scope='col') Current expiry
+          th(scope='col') Status
+          th.table-actions(scope='col')
+            span.visually-hidden Actions
+      tbody
+        each row in rows
+          -
+            var rowDocument = row.document;
+            var rowCategory = rowDocument.category && rowDocument.category.name ? rowDocument.category : null;
+            var rowOwner = rowDocument.owner && rowDocument.owner.last_name ? rowDocument.owner : null;
+            var categoryName = rowCategory ? rowCategory.name : 'Unknown category';
+            var ownerName = rowOwner ? rowOwner.name : 'Unknown owner';
+          tr(data-document-id=String(rowDocument._id))
+            td
+              a.fw-semibold.text-decoration-none(href=rowDocument.url)= showCategory ? categoryName : ownerName
+              if showCategory && showOwner
+                .small.text-body-secondary= ownerName
+            if showScope
+              td
+                if rowCategory
+                  +scopeBadge(rowCategory.scope)
+            td
+              if row.currentVersion
+                +expiry(row.currentVersion.expires_at, row.daysUntil)
+              else
+                span.text-body-secondary —
+            td
+              +statusBadge(row.status)
+            td.table-actions
+              .d-flex.justify-content-end.gap-1
+                +linkButton(`/versions/new?document=${rowDocument._id}`, 'Upload new version', { icon: 'cloud-arrow-up', iconOnly: true, size: 'sm' })
+                +linkButton(rowDocument.url, 'View document', { icon: 'eye', iconOnly: true, size: 'sm' })
+
+mixin pagination(pager, opts)
+  - var pagerOpts = opts || {};
+  if pager && pager.totalPages > 1
+    nav(aria-label=(pagerOpts.label || 'Pagination'))&attributes(attributes)
+      ul.pagination.flex-wrap.mb-0
+        li.page-item(class=(pager.previousUrl ? null : 'disabled'))
+          if pager.previousUrl
+            a.page-link(href=pager.previousUrl rel='prev')
+              +icon('chevron-left')
+              span.visually-hidden Previous page
+          else
+            span.page-link
+              +icon('chevron-left')
+              span.visually-hidden Previous page
+        each pageItem in pager.pages
+          if pageItem.gap
+            li.page-item.disabled
+              span.page-link …
+          else
+            li.page-item(class=(pageItem.current ? 'active' : null))
+              a.page-link(href=pageItem.url aria-current=(pageItem.current ? 'page' : null))
+                span.visually-hidden Page
+                = ' ' + pageItem.number
+        li.page-item(class=(pager.nextUrl ? null : 'disabled'))
+          if pager.nextUrl
+            a.page-link(href=pager.nextUrl rel='next')
+              +icon('chevron-right')
+              span.visually-hidden Next page
+          else
+            span.page-link
+              +icon('chevron-right')
+              span.visually-hidden Next page
+
+mixin versionFile(version)
+  - var storedFile = version && version.file && version.file.stored_name ? version.file : null;
+  if storedFile
+    -
+      var fileMime = String(storedFile.mime_type || '');
+      var fileIcon = fileMime === 'application/pdf' ? 'file-earmark-pdf' : fileMime.indexOf('image/') === 0 ? 'file-earmark-image' : 'file-earmark';
+      var fileLabel = storedFile.original_name || 'Download file';
+    span.d-inline-flex.flex-wrap.align-items-center.column-gap-2&attributes(attributes)
+      a.d-inline-flex.align-items-center.gap-1(href=version.download_url title=`Download ${fileLabel}`)
+        +icon(fileIcon)
+        span= fileLabel
+      if storedFile.size != null
+        span.small.text-body-secondary.text-nowrap= fmt.fileSize(storedFile.size)
+  else
+    span.text-body-secondary&attributes(attributes) No file
+
+mixin expiry(date, days)
+  div&attributes(attributes)
+    .text-nowrap= fmt.date(date)
+    if days != null
+      .small.text-body-secondary= fmt.relativeDays(days)
+
+mixin multiline(text)
+  each textLine, lineIndex in String(text == null ? '' : text).split(/\r?\n/)
+    if lineIndex > 0
+      br
+    = textLine

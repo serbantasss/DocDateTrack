@@ -1,6 +1,26 @@
-.env
-.env.*
-!.env.example
-.git
-node_modules
-uploads
+# The build context is an allowlist: everything is excluded except what the Dockerfile copies.
+# This keeps secrets (.env files), user data (uploads/), Git metadata, node_modules, tests, docs,
+# CI and editor files out of the image and makes the context small.
+*
+!app.js
+!bin/
+!config/
+!controllers/
+!lib/
+!middleware/
+!models/
+!public/
+!routes/
+!services/
+!tasks/
+!views/
+!package.json
+!package-lock.json
+!LICENSE
+
+# Never include these, even inside the directories above.
+**/.DS_Store
+**/*.swp
+**/*.log
+**/*.test.js
+**/node_modules

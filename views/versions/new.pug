@@ -1,0 +1,54 @@
+//-
+  Upload-version form. Locals: title, targetDocument (populated; null when the owner and the
+  category are chosen in the form), owners, categories (empty when targetDocument is set),
+  values { document, owner, category, issued_at, expires_at, notes }, errors, upload (see
+  views/versions/_fields.pug).
+extends ../layout
+include _fields
+
+block content
+  -
+    var crumbs = targetDocument
+      ? [{ label: 'Documents', href: '/documents' }, { label: targetDocument.title, href: targetDocument.url }]
+      : [{ label: 'Versions', href: '/versions' }];
+    var cancelUrl = targetDocument ? targetDocument.url : '/versions';
+    var missingSetup = !targetDocument && (!owners.length || !categories.length);
+    var categoryOptions = categories.map(function (category) {
+      return { value: category._id, label: category.name + ' (' + (scopes[category.scope] || category.scope) + ')' };
+    });
+  +pageHeader({ title: 'Upload version', subtitle: targetDocument ? targetDocument.title : 'Record the issue and expiry dates of a document, optionally with a scan.', icon: 'cloud-arrow-up', breadcrumbs: crumbs })
+
+  .row
+    .col-lg-9.col-xl-7
+      if missingSetup
+        +errorSummary(errors, { links: false })
+        +alert('warning', { title: 'Add an owner and a category first' })
+          p.mb-2 Every version belongs to the document of one owner and one category.
+          ul.mb-0
+            if !owners.length
+              li
+                a.alert-link(href='/owners/new') Add an owner
+            if !categories.length
+              li
+                a.alert-link(href='/categories/new') Add a category
+      else
+        .card.shadow-sm
+          .card-body.p-4
+            +errorSummary(errors, { ids: { document: 'owner' } })
+            +form({ action: '/versions', multipart: true })
+              if targetDocument
+                +hidden('document', targetDocument._id)
+                .mb-3
+                  .form-label.mb-1 Document
+                  a.fw-semibold(href=targetDocument.url)= targetDocument.title
+              else
+                .row.g-3
+                  +select({ name: 'owner', label: 'Owner', options: owners, valueKey: '_id', labelKey: 'name', placeholder: 'Choose an owner…', required: true, class: 'col-md-6' })
+                  +select({ name: 'category', label: 'Category', options: categoryOptions, placeholder: 'Choose a category…', required: true, class: 'col-md-6' })
+                p.form-text.mt-2.mb-3 If this owner has no document of this category yet, it is created for you.
+              +versionFields()
+              +versionFileField(upload)
+              +submit('Upload version', { icon: 'cloud-arrow-up', cancel: cancelUrl })
+
+block scripts
+  script(src='/js/uploads.js')

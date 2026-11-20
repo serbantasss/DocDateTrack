@@ -1,0 +1,33 @@
+//-
+  Auth layout: centred single-card pages for anonymous visitors (sign in, registration).
+  Blocks: `content` (inside the card), `afterCard` (below the card, e.g. links),
+          `styles`, `scripts` (as in views/layout.pug).
+  Locals: title, appName, csrfToken, messages.
+doctype html
+include ../mixins/forms
+include ../mixins/ui
+include ../mixins/layout
+html(lang='en' data-bs-theme='light')
+  head
+    include ../partials/head
+    block styles
+  body.d-flex.flex-column.min-vh-100.bg-body-tertiary
+    a.skip-link.btn.btn-primary.visually-hidden-focusable(href='#main-content') Skip to main content
+    .container.d-flex.justify-content-end.pt-3
+      +themeToggle()
+    main#main-content.flex-grow-1.d-flex.align-items-center.py-4(tabindex='-1')
+      .container
+        .row.justify-content-center
+          .col-sm-10.col-md-8.col-lg-6.col-xl-5.col-xxl-4
+            .text-center.mb-4
+              a.d-inline-flex.flex-column.align-items-center.gap-2.link-body-emphasis.text-decoration-none(href='/')
+                img(src='/images/logo.svg' alt='' width='56' height='56')
+                span.fs-4.fw-semibold= appName || 'DocDateTrack'
+            include ../partials/flash
+            .card.shadow-sm
+              .card-body.p-4
+                block content
+            block afterCard
+    include ../partials/footer
+    include ../partials/scripts
+    block scripts

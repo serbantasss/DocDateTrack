@@ -1,0 +1,474 @@
+//-
+  views/mixins/forms.pug — form helpers (Bootstrap 5.3)
+  ==========================================================================
+  Included by views/layout.pug and views/layouts/auth.pug, so every page that
+  extends a layout can call these mixins. The file holds mixin definitions
+  only, so it may also be included at the top of an extending template.
+
+  Conventions
+  - Controllers pass previous input (or the record being edited) as `values`
+    and validation errors as `errors` (express-validator `.mapped()`:
+    `{ field: { msg } }`). Field mixins pick both up by `name`; override them
+    per call with the `value`, `error`, `values` or `errors` options.
+  - Options are one object. Attributes added after the call go to the control
+    element:  +input({ name: 'q', label: 'Search' })(data-autosubmit)
+  - The `class` option styles the wrapper element (default 'mb-3'; use e.g.
+    'col-md-6' inside a `.row.g-3`).
+  - Ids default to the field name (characters other than A-Z a-z 0-9 _ -
+    become '-'), which is what +errorSummary links to.
+  - Password and file inputs never echo a value.
+
+  Common field options (+input, +textarea, +select, +checkbox, +radios, +file)
+    name       string        field name (required)
+    label      string        visible label (+radios: the legend); always give one
+    hideLabel  boolean       keep the label for screen readers only
+    id         string        element id (default: derived from name)
+    value      any           current value (default values[name]; Date → YYYY-MM-DD for type date)
+    help       string        help text under the control (linked with aria-describedby)
+    error      string|false  error message (default errors[name].msg); false hides it
+    required   boolean       `required` attribute + a visual "*" marker
+    disabled, readonly, autofocus   boolean
+    size       'sm'|'lg'     control size
+    class      string|array  wrapper classes (default 'mb-3')
+  Invalid fields get `.is-invalid`, `aria-invalid="true"` and a `.invalid-feedback`
+  message whose id (`<id>-error`) is listed in `aria-describedby`.
+
+  +csrf()
+    Hidden `_csrf` field carrying the `csrfToken` local.
+    Example:  form(method='post' action='/logout')
+                +csrf()
+
+  +hidden(name, value)
+    Hidden input. `value` defaults to values[name]; ObjectIds and populated
+    documents are rendered as their id.
+    Example:  +hidden('document', doc._id)
+
+  +form(opts)  — the block is the form content (or pass just the action string)
+    opts.action     string   target URL (omitted: the current URL)
+    opts.method     'GET'|'POST'|'PUT'|'PATCH'|'DELETE' (default 'POST'); PUT, PATCH and
+                    DELETE are sent as POST with `_method=<METHOD>` appended to the action
+    opts.multipart  boolean  enctype="multipart/form-data" (file uploads)
+    opts.confirm    string   ask for confirmation before submitting (data-confirm)
+    opts.id, opts.class
+    Every method except GET gets the CSRF field. Attributes go to the <form>.
+    Example:  +form({ action: owner.url, method: 'PUT' })
+                +input({ name: 'first_name', label: 'First name', required: true })
+                +submit('Save changes', { cancel: owner.url })
+
+  +input(opts)  — text-like input
+    opts.type         'text'|'email'|'tel'|'date'|'password'|'number'|'url'|'search' (default 'text')
+    opts.placeholder, opts.autocomplete, opts.min, opts.max, opts.step,
+    opts.minlength, opts.maxlength, opts.pattern, opts.inputmode
+    (min/max accept Dates for type date)
+    Example:  +input({ name: 'email', type: 'email', label: 'Email', autocomplete: 'email', required: true })
+
+  +textarea(opts)
+    opts.rows (default 3), opts.placeholder, opts.minlength, opts.maxlength
+    Example:  +textarea({ name: 'notes', label: 'Notes', rows: 4, maxlength: 2000 })
+
+  +select(opts)
+    opts.options      [{ value, label, disabled }] | ['a', 'b'] | { value: label } (e.g. `scopes`)
+    opts.valueKey     property used as the value of object options (default 'value', e.g. '_id')
+    opts.labelKey     property used as the label of object options (default 'label', e.g. 'name')
+    opts.placeholder  text of an empty first option (value ''), selected when nothing matches
+    opts.multiple     boolean (value may then be an array)
+    Values are compared as strings, so ObjectIds and populated documents match.
+    Example:  +select({ name: 'owner', label: 'Owner', options: owners, valueKey: '_id', labelKey: 'name', placeholder: 'Choose an owner…', required: true })
+
+  +checkbox(opts)
+    opts.value    submitted value (default '1')
+    opts.checked  boolean (default: values[name] is set and not '', '0', 'false' or 'off')
+    opts.switch   boolean — render as a switch
+    opts.inline   boolean
+    Inside a grid row, wrap it in a column element.
+    Example:  +checkbox({ name: 'remember', label: 'Keep me signed in' })
+
+  +radios(opts)  — radio group in a <fieldset>; `label` becomes the <legend>
+    opts.options, opts.valueKey, opts.labelKey  as for +select
+    opts.inline   boolean
+    Attributes go to the <fieldset>.
+    Example:  +radios({ name: 'scope', label: 'Scope', options: scopes, inline: true, required: true })
+
+  +file(opts)
+    opts.accept    e.g. '.pdf,.jpg,.jpeg,.png,.webp'
+    opts.multiple  boolean
+    Remember `multipart: true` on the surrounding +form.
+    Example:  +file({ name: 'file', label: 'Scan', accept: '.pdf,.jpg,.jpeg,.png,.webp', help: 'PDF, JPEG, PNG or WebP, up to 10 MB.' })
+
+  +errorSummary(errors, opts)  — danger alert listing every message; nothing when empty
+    errors      mapped object, `.array()` result or a string (default: the `errors` local)
+    opts.title  heading (default 'Please fix the following problem:' or '… following N problems:')
+    opts.ids    { field: elementId } for fields rendered with a custom id
+    opts.links  false to list plain text instead of links to the fields
+    Example:  +errorSummary()
+
+  +submit(label, opts)  — submit button row (or pass a single options object with `label`)
+    label             button text (default 'Save')
+    opts.icon         Bootstrap Icons name, e.g. 'check-lg'
+    opts.variant      button variant (default 'primary')
+    opts.size         'sm'|'lg'
+    opts.block        boolean — full-width button
+    opts.cancel       href of a "Cancel" link shown next to the button
+    opts.cancelLabel  default 'Cancel'
+    opts.name, opts.value  submitted with the button
+    opts.class        wrapper margin classes (default 'mt-4')
+    Attributes go to the <button>.
+    Example:  +submit('Save owner', { icon: 'check-lg', cancel: '/owners' })
+
+  +deleteButton(action, opts)  — POST form to `<action>?_method=DELETE` with CSRF and confirmation
+    opts.confirm    message (default 'Delete this item? This cannot be undone.'); false skips it
+    opts.label      default 'Delete' (tooltip and accessible name when iconOnly)
+    opts.iconOnly   boolean — icon button with a tooltip
+    opts.icon       default 'trash3'
+    opts.size       'sm'|'lg'
+    opts.variant    default 'outline-danger'
+    opts.formClass  classes of the <form> (default 'd-inline-block')
+    Attributes go to the <button>.
+    Example:  +deleteButton(owner.url, { iconOnly: true, size: 'sm', confirm: `Delete ${owner.name} and all their documents?` })
+
+mixin csrf()
+  input(type='hidden' name='_csrf' value=csrfToken)
+
+mixin hidden(name, value)
+  -
+    var hiddenValue = value !== undefined ? value : values != null ? values[name] : undefined;
+    if (hiddenValue != null && typeof hiddenValue === 'object' && hiddenValue._id != null) {
+      hiddenValue = hiddenValue._id;
+    }
+  input(type='hidden' name=name value=(hiddenValue == null ? null : String(hiddenValue)))
+
+mixin form(opts)
+  -
+    var formOpts = typeof opts === 'string' ? { action: opts } : opts || {};
+    var formMethod = String(formOpts.method || 'POST').toUpperCase();
+    var formAction = formOpts.action == null ? '' : String(formOpts.action);
+    if (formMethod !== 'GET' && formMethod !== 'POST') {
+      formAction += (formAction.indexOf('?') === -1 ? '?' : '&') + '_method=' + formMethod;
+    }
+  form(
+    method=(formMethod === 'GET' ? 'get' : 'post')
+    action=(formAction || null)
+    enctype=(formOpts.multipart ? 'multipart/form-data' : null)
+    id=formOpts.id
+    class=formOpts.class
+    data-confirm=(formOpts.confirm || null)
+  )&attributes(attributes)
+    if formMethod !== 'GET'
+      +csrf()
+    block
+
+mixin input(opts)
+  +_field('input', opts)&attributes(attributes)
+
+mixin textarea(opts)
+  +_field('textarea', opts)&attributes(attributes)
+
+mixin select(opts)
+  +_field('select', opts)&attributes(attributes)
+
+mixin checkbox(opts)
+  +_field('checkbox', opts)&attributes(attributes)
+
+mixin radios(opts)
+  +_field('radios', opts)&attributes(attributes)
+
+mixin file(opts)
+  +_field('input', Object.assign({}, opts, { type: 'file' }))&attributes(attributes)
+
+//- Internal: label text followed by the required marker.
+mixin _labelText(text, required)
+  = text
+  if required
+    span.text-danger.ms-1(aria-hidden='true') *
+
+//- Internal: shared implementation of the field mixins.
+mixin _field(kind, opts)
+  -
+    var o = opts || {};
+    var name = o.name;
+    var id = o.id || String(name).replace(/[^A-Za-z0-9_-]+/g, '-');
+    var type = kind === 'input' ? o.type || 'text' : null;
+    var keyOf = function (v) {
+      if (v == null) return '';
+      if (typeof v === 'object' && v._id != null) return String(v._id);
+      return String(v);
+    };
+    var dateOnly = function (v) {
+      if (v instanceof Date) {
+        if (isNaN(v.getTime())) return '';
+        return fmt && typeof fmt.dateInput === 'function'
+          ? fmt.dateInput(v)
+          : v.toISOString().slice(0, 10);
+      }
+      return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v) ? v.slice(0, 10) : v;
+    };
+
+    var valueSource = o.values !== undefined ? o.values : values;
+    var errorSource = o.errors !== undefined ? o.errors : errors;
+    var stored = valueSource != null ? valueSource[name] : undefined;
+    var current = kind !== 'checkbox' && o.value !== undefined ? o.value : stored;
+
+    var errorText = '';
+    if (o.error != null && o.error !== false) {
+      errorText = String(o.error);
+    } else if (o.error !== false && errorSource != null && errorSource[name] != null) {
+      var fieldError = errorSource[name];
+      errorText = String(typeof fieldError === 'object' ? fieldError.msg || '' : fieldError);
+    }
+    var errorId = errorText ? id + '-error' : null;
+    var helpId = o.help ? id + '-help' : null;
+    var describedBy = [errorId, helpId].filter(Boolean).join(' ') || null;
+    var invalid = errorText ? 'true' : null;
+    var wrapperClass = o.class !== undefined ? o.class : 'mb-3';
+    var labelClass = o.hideLabel ? 'visually-hidden' : null;
+    var baseClass = kind === 'select' ? 'form-select' : 'form-control';
+    var controlClass = [
+      baseClass,
+      o.size ? baseClass + '-' + o.size : null,
+      errorText ? 'is-invalid' : null,
+    ];
+
+    var optionList = [];
+    if (kind === 'select' || kind === 'radios') {
+      var rawOptions = o.options || [];
+      var valueKey = o.valueKey || 'value';
+      var labelKey = o.labelKey || 'label';
+      optionList = Array.isArray(rawOptions)
+        ? rawOptions.map(function (opt) {
+            if (opt === null || typeof opt !== 'object') return { value: opt, label: opt };
+            var optValue = opt[valueKey];
+            return {
+              value: optValue,
+              label: opt[labelKey] != null ? opt[labelKey] : keyOf(optValue),
+              disabled: Boolean(opt.disabled),
+            };
+          })
+        : Object.keys(rawOptions).map(function (key) {
+            return { value: key, label: rawOptions[key] };
+          });
+    }
+    var selectedKeys = (Array.isArray(current) ? current : current == null ? [] : [current]).map(
+      keyOf
+    );
+    var isSelected = function (opt) {
+      return selectedKeys.indexOf(keyOf(opt.value)) !== -1;
+    };
+    var anySelected = optionList.some(isSelected);
+
+    var textValue;
+    if (kind !== 'checkbox' && type !== 'password' && type !== 'file' && current != null) {
+      if (type === 'date') textValue = dateOnly(current);
+      else if (current instanceof Date) textValue = current.toISOString();
+      else textValue = keyOf(current);
+    }
+
+    var submitValue = o.value !== undefined ? keyOf(o.value) : '1';
+    var checked = false;
+    if (kind === 'checkbox') {
+      if (o.checked !== undefined) checked = Boolean(o.checked);
+      else if (Array.isArray(stored)) checked = stored.map(keyOf).indexOf(submitValue) !== -1;
+      else {
+        checked =
+          stored === true ||
+          (stored != null &&
+            stored !== false &&
+            ['', '0', 'false', 'off'].indexOf(String(stored)) === -1);
+      }
+    }
+  if kind === 'checkbox'
+    div(class=['form-check', o.switch ? 'form-switch' : null, o.inline ? 'form-check-inline' : null, wrapperClass])
+      input.form-check-input(
+        type='checkbox'
+        id=id
+        name=name
+        value=submitValue
+        checked=checked
+        role=(o.switch ? 'switch' : null)
+        required=o.required
+        disabled=o.disabled
+        autofocus=o.autofocus
+        class=(errorText ? 'is-invalid' : null)
+        aria-invalid=invalid
+        aria-describedby=describedBy
+      )&attributes(attributes)
+      label.form-check-label(for=id)
+        +_labelText(o.label, o.required)
+      if errorText
+        .invalid-feedback.d-block(id=errorId)= errorText
+      if o.help
+        .form-text.mt-0(id=helpId)= o.help
+  else if kind === 'radios'
+    fieldset(id=id class=wrapperClass aria-describedby=describedBy)&attributes(attributes)
+      legend(class=['form-label', 'fs-6', labelClass])
+        +_labelText(o.label, o.required)
+      each opt in optionList
+        - var optionId = id + '-' + keyOf(opt.value).replace(/[^A-Za-z0-9_-]+/g, '-')
+        div(class=['form-check', o.inline ? 'form-check-inline' : null])
+          input.form-check-input(
+            type='radio'
+            id=optionId
+            name=name
+            value=keyOf(opt.value)
+            checked=isSelected(opt)
+            required=o.required
+            disabled=(o.disabled || opt.disabled)
+            class=(errorText ? 'is-invalid' : null)
+            aria-invalid=invalid
+          )
+          label.form-check-label(for=optionId)= opt.label
+      if errorText
+        .invalid-feedback.d-block(id=errorId)= errorText
+      if o.help
+        .form-text(id=helpId)= o.help
+  else
+    div(class=wrapperClass)
+      if o.label
+        label.form-label(for=id class=labelClass)
+          +_labelText(o.label, o.required)
+      if kind === 'textarea'
+        textarea(
+          id=id
+          name=name
+          rows=(o.rows || 3)
+          class=controlClass
+          placeholder=o.placeholder
+          minlength=o.minlength
+          maxlength=o.maxlength
+          required=o.required
+          disabled=o.disabled
+          readonly=o.readonly
+          autofocus=o.autofocus
+          aria-invalid=invalid
+          aria-describedby=describedBy
+        )&attributes(attributes)= textValue
+      else if kind === 'select'
+        select(
+          id=id
+          name=name
+          class=controlClass
+          multiple=o.multiple
+          required=o.required
+          disabled=o.disabled
+          autofocus=o.autofocus
+          aria-invalid=invalid
+          aria-describedby=describedBy
+        )&attributes(attributes)
+          if o.placeholder
+            option(value='' selected=!anySelected)= o.placeholder
+          each opt in optionList
+            option(value=keyOf(opt.value) selected=isSelected(opt) disabled=opt.disabled)= opt.label
+      else
+        input(
+          type=type
+          id=id
+          name=name
+          value=textValue
+          class=controlClass
+          placeholder=o.placeholder
+          autocomplete=o.autocomplete
+          min=dateOnly(o.min)
+          max=dateOnly(o.max)
+          step=o.step
+          minlength=o.minlength
+          maxlength=o.maxlength
+          pattern=o.pattern
+          inputmode=o.inputmode
+          accept=o.accept
+          multiple=o.multiple
+          required=o.required
+          disabled=o.disabled
+          readonly=o.readonly
+          autofocus=o.autofocus
+          aria-invalid=invalid
+          aria-describedby=describedBy
+        )&attributes(attributes)
+      if errorText
+        .invalid-feedback.d-block(id=errorId)= errorText
+      if o.help
+        .form-text(id=helpId)= o.help
+
+mixin errorSummary(errs, opts)
+  -
+    var summaryOpts = opts || {};
+    var summarySource = errs !== undefined ? errs : errors;
+    var summaryItems = [];
+    if (Array.isArray(summarySource)) {
+      summaryItems = summarySource.map(function (e) {
+        return e && typeof e === 'object'
+          ? { field: e.path || e.param, msg: e.msg || e.message }
+          : { msg: e };
+      });
+    } else if (summarySource && typeof summarySource === 'object') {
+      summaryItems = Object.keys(summarySource).map(function (field) {
+        var e = summarySource[field];
+        return { field: field, msg: e && typeof e === 'object' ? e.msg : e };
+      });
+    } else if (summarySource) {
+      summaryItems = [{ msg: summarySource }];
+    }
+    summaryItems = summaryItems.filter(function (item) {
+      return item.msg != null && item.msg !== '';
+    });
+    var summaryHref = function (field) {
+      if (summaryOpts.links === false || !field) return null;
+      var ids = summaryOpts.ids || {};
+      return '#' + (ids[field] || String(field).replace(/[^A-Za-z0-9_-]+/g, '-'));
+    };
+    var summaryTitle =
+      summaryOpts.title ||
+      (summaryItems.length === 1
+        ? 'Please fix the following problem:'
+        : 'Please fix the following ' + summaryItems.length + ' problems:');
+  if summaryItems.length
+    .alert.alert-danger(role='alert' class=summaryOpts.class)&attributes(attributes)
+      h2.h6.alert-heading.d-flex.align-items-center.gap-2
+        i.bi.bi-exclamation-octagon-fill(aria-hidden='true')
+        = summaryTitle
+      ul.mb-0.ps-4
+        each item in summaryItems
+          li
+            if summaryHref(item.field)
+              a.alert-link.fw-normal(href=summaryHref(item.field))= item.msg
+            else
+              = item.msg
+
+mixin submit(label, opts)
+  -
+    var submitOpts =
+      label !== null && typeof label === 'object'
+        ? label
+        : Object.assign({}, opts, label != null ? { label: label } : {});
+    var submitIcon = submitOpts.icon ? String(submitOpts.icon) : null;
+  div(class=['d-flex', 'flex-wrap', 'align-items-center', 'gap-2', submitOpts.class !== undefined ? submitOpts.class : 'mt-4'])
+    button(
+      type='submit'
+      class=['btn', 'btn-' + (submitOpts.variant || 'primary'), submitOpts.size ? 'btn-' + submitOpts.size : null, submitOpts.block ? 'w-100' : null]
+      name=submitOpts.name
+      value=submitOpts.value
+    )&attributes(attributes)
+      if submitIcon
+        i.bi.me-1(class=(submitIcon.indexOf('bi-') === 0 ? submitIcon : 'bi-' + submitIcon) aria-hidden='true')
+      = submitOpts.label || 'Save'
+    if submitOpts.cancel
+      a.btn.btn-link(href=submitOpts.cancel class=(submitOpts.size ? 'btn-' + submitOpts.size : null))= submitOpts.cancelLabel || 'Cancel'
+
+mixin deleteButton(action, opts)
+  -
+    var deleteOpts = opts || {};
+    var deleteLabel = deleteOpts.label || 'Delete';
+    var deleteIcon = String(deleteOpts.icon || 'trash3');
+    var deleteConfirm =
+      deleteOpts.confirm === false
+        ? null
+        : deleteOpts.confirm || 'Delete this item? This cannot be undone.';
+  +form({ action: action, method: 'DELETE', confirm: deleteConfirm, class: deleteOpts.formClass !== undefined ? deleteOpts.formClass : 'd-inline-block' })
+    button(
+      type='submit'
+      class=['btn', 'btn-' + (deleteOpts.variant || 'outline-danger'), deleteOpts.size ? 'btn-' + deleteOpts.size : null]
+      aria-label=(deleteOpts.iconOnly ? deleteLabel : null)
+      title=(deleteOpts.iconOnly ? deleteLabel : null)
+      data-bs-toggle=(deleteOpts.iconOnly ? 'tooltip' : null)
+    )&attributes(attributes)
+      i.bi(class=[deleteIcon.indexOf('bi-') === 0 ? deleteIcon : 'bi-' + deleteIcon, deleteOpts.iconOnly ? null : 'me-1'] aria-hidden='true')
+      if !deleteOpts.iconOnly
+        = deleteLabel

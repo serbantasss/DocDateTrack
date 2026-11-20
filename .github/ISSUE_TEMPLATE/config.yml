@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/serbantasss/DocDateTrack/security/policy
+    about: Please report security issues privately, as described in the security policy, and never in a public issue.
+  - name: Documentation
+    url: https://github.com/serbantasss/DocDateTrack#readme
+    about: Installation, configuration and usage instructions.

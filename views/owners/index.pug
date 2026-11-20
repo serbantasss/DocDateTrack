@@ -1,0 +1,72 @@
+//-
+  Owners list. Locals: title, owners (Owner documents sorted by last name), stats ({ ownerId:
+  summarize() of the owner's documents }), q (search text, '' when none), hasOwners (whether any
+  owner exists, regardless of the search), phoneHref(phone) (`tel:` link or null).
+extends ../layout
+
+block content
+  +pageHeader({ title: 'Owners', icon: 'person-vcard', subtitle: 'The people and organisations whose documents you track.' })
+    +linkButton('/owners/new', 'Add owner', { icon: 'person-plus', variant: 'primary' })
+
+  if !hasOwners
+    +emptyState({ icon: 'people', title: 'No owners yet', message: 'Owners are the people or organisations whose documents you track. Add the first one to get started.', action: { href: '/owners/new', label: 'Add owner', icon: 'person-plus' } })
+  else
+    +form({ action: '/owners', method: 'GET', class: 'row g-2 align-items-center mb-3' })(role='search')
+      .col-sm-8.col-md-6.col-lg-5
+        +input({ name: 'q', type: 'search', label: 'Search owners', hideLabel: true, value: q, placeholder: 'Search by name or email', maxlength: 100, class: '' })
+      .col-auto
+        button.btn.btn-outline-secondary(type='submit')
+          +icon('search')(class='me-1')
+          | Search
+      if q
+        .col-auto
+          a.btn.btn-link(href='/owners') Clear search
+
+    if owners.length === 0
+      +emptyState({ icon: 'search', title: 'No matching owners', message: `No owner matches “${q}”. Check the spelling or search for part of the name or email address.`, action: { href: '/owners', label: 'Show all owners', icon: 'people' } })
+    else
+      if q
+        p.small.text-body-secondary(role='status')
+          | #{owners.length === 1 ? '1 owner matches' : owners.length + ' owners match'} “#{q}”.
+      .card
+        .table-responsive
+          table.table.table-hover.align-middle
+            caption.visually-hidden Owners
+            thead
+              tr
+                th(scope='col') Name
+                th.d-none.d-md-table-cell(scope='col') Email
+                th.d-none.d-lg-table-cell(scope='col') Phone
+                th.text-end(scope='col') Documents
+                th(scope='col') Needs attention
+                th.table-actions(scope='col')
+                  span.visually-hidden Actions
+            tbody
+              each owner in owners
+                -
+                  var ownerStats = stats[String(owner._id)] || { total: 0, expired: 0, expiring: 0 };
+                  var ownerTel = phoneHref(owner.phone);
+                tr
+                  td
+                    a.fw-semibold.text-decoration-none(href=owner.url)= owner.name
+                  td.d-none.d-md-table-cell
+                    if owner.email
+                      a.text-break(href=`mailto:${owner.email}`)= owner.email
+                    else
+                      span.text-body-secondary —
+                  td.d-none.d-lg-table-cell.text-nowrap
+                    if ownerTel
+                      a(href=ownerTel)= owner.phone
+                    else if owner.phone
+                      = owner.phone
+                    else
+                      span.text-body-secondary —
+                  td.text-end= ownerStats.total
+                  td
+                    .d-flex.flex-wrap.gap-1
+                      if ownerStats.expired
+                        +statusBadge('expired', { label: `${ownerStats.expired} expired` })
+                      if ownerStats.expiring
+                        +statusBadge('expiring', { label: `${ownerStats.expiring} expiring soon` })
+                  td.table-actions
+                    +linkButton(`${owner.url}/edit`, `Edit ${owner.name}`, { icon: 'pencil-square', iconOnly: true, size: 'sm' })

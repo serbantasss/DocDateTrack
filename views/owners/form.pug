@@ -1,0 +1,25 @@
+//-
+  Add/edit owner form. Locals: title, owner (null when adding; when editing an object with _id,
+  name and url), values { first_name, last_name, email, phone, notes }, errors (express-validator
+  `.mapped()`).
+extends ../layout
+
+block content
+  -
+    var ownerCrumbs = [{ label: 'Owners', href: '/owners' }];
+    if (owner) ownerCrumbs.push({ label: owner.name, href: owner.url });
+  +pageHeader({ title: owner ? 'Edit owner' : 'Add owner', icon: owner ? 'pencil-square' : 'person-plus', subtitle: owner ? owner.name : 'A person or organisation whose documents you want to track.', breadcrumbs: ownerCrumbs, crumb: owner ? 'Edit' : 'New owner' })
+
+  .row
+    .col-lg-9.col-xl-8
+      +errorSummary()
+      +form({ action: owner ? owner.url : '/owners', method: owner ? 'PUT' : 'POST' })
+        .card
+          .card-body
+            .row.g-3
+              +input({ name: 'first_name', label: 'First name', autocomplete: 'given-name', maxlength: 100, required: true, autofocus: !owner, class: 'col-sm-6' })
+              +input({ name: 'last_name', label: 'Last name', autocomplete: 'family-name', maxlength: 100, required: true, class: 'col-sm-6' })
+              +input({ name: 'email', type: 'email', label: 'Email', autocomplete: 'email', maxlength: 254, help: 'Optional. Used for expiry reminders when owners are notified by email.', class: 'col-sm-6' })
+              +input({ name: 'phone', type: 'tel', label: 'Phone', autocomplete: 'tel', maxlength: 40, help: 'Optional. Any format, e.g. +44 20 7946 0000 ext. 12.', class: 'col-sm-6' })
+              +textarea({ name: 'notes', label: 'Notes', rows: 4, maxlength: 2000, help: 'Optional. Up to 2000 characters.', class: 'col-12' })
+        +submit(owner ? 'Save changes' : 'Add owner', { icon: 'check-lg', cancel: owner ? owner.url : '/owners' })

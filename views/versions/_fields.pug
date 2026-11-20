@@ -1,0 +1,22 @@
+//-
+  views/versions/_fields.pug — fields shared by the version forms (mixin definitions only).
+
+  +versionFields()  — issue date, expiry date and notes (from the `values` / `errors` locals)
+
+  +versionFileField(upload, opts)  — the file input; keep it the LAST field of the form, so the
+                                     other fields are parsed even when the file is rejected
+    upload       the `upload` local: { accept, help, maxBytes, sizeError, chooseAgain }
+    opts.label   default 'File'
+    opts.help    text shown before the accepted types and size limit
+
+mixin versionFields()
+  .row.g-3.mb-3
+    +input({ name: 'issued_at', type: 'date', label: 'Issue date', min: '1900-01-01', max: '2200-12-31', help: 'Optional.', class: 'col-sm-6' })
+    +input({ name: 'expires_at', type: 'date', label: 'Expiry date', min: '1900-01-01', max: '2200-12-31', required: true, class: 'col-sm-6' })
+  +textarea({ name: 'notes', label: 'Notes', rows: 3, maxlength: 2000, help: 'Optional, e.g. the document number or where the original is kept.' })
+
+mixin versionFileField(upload, opts)
+  - var fieldOpts = opts || {};
+  if upload.chooseAgain
+    +alert('warning', { message: 'Your file was not saved because of the problems above. Please choose it again.' })(class='small py-2')
+  +file({ name: 'file', label: fieldOpts.label || 'File', accept: upload.accept, help: (fieldOpts.help || 'Optional.') + ' ' + upload.help })(data-max-bytes=upload.maxBytes data-size-error=upload.sizeError)

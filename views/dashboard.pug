@@ -1,0 +1,115 @@
+//-
+  Dashboard. Locals: title, summary { expired, expiring, valid, missing, total },
+  attention (expired + expiring rows, most urgent first, at most 10), attentionTotal,
+  recentVersions [{ version (document, owner and category populated), daysUntil }],
+  onboarding: { owners, categories, documents } counts while setup is incomplete, else null.
+extends layout
+include mixins/documents
+
+block content
+  -
+    var warningDays = Number(expiryWarningDays) || 0;
+    var warningWindow = warningDays === 1 ? '1 day' : warningDays + ' days';
+    var summaryCards = [
+      { status: 'expired', hint: 'Past their expiry date' },
+      { status: 'expiring', hint: warningDays > 0 ? 'Within ' + warningWindow : 'Expire today' },
+      { status: 'valid', hint: 'More than ' + warningWindow + ' left' },
+      { status: 'missing', hint: 'No version uploaded yet' },
+    ];
+    var onboardingSteps = onboarding
+      ? [
+          { done: onboarding.owners > 0, title: 'Add an owner', text: 'Owners are the people or companies whose documents you track.', href: '/owners/new', label: 'Add owner', icon: 'person-plus' },
+          { done: onboarding.categories > 0, title: 'Add a category', text: 'Categories are document types, such as “Passport” or “Car insurance”.', href: '/categories/new', label: 'Add category', icon: 'tag' },
+          { done: onboarding.documents > 0, title: 'Add a document and upload its first version', text: 'Choose an owner and a category, enter the expiry date and attach a scan if you have one.', href: '/versions/new', label: 'Upload first version', icon: 'cloud-arrow-up', locked: onboarding.owners === 0 || onboarding.categories === 0 },
+        ]
+      : [];
+  +pageHeader({ title: 'Dashboard', subtitle: summary.total === 1 ? 'Expiry overview of 1 document' : 'Expiry overview of ' + summary.total + ' documents', icon: 'speedometer2' })
+    +linkButton('/documents/new', 'Add document', { icon: 'file-earmark-plus' })
+    +linkButton('/versions/new', 'Upload version', { icon: 'cloud-arrow-up', variant: 'primary' })
+
+  if onboarding
+    section.card.border-primary-subtle.shadow-sm.mb-4(aria-labelledby='onboarding-title' data-onboarding)
+      .card-body.p-4
+        h2#onboarding-title.h5.mb-1 Get started
+        p.text-body-secondary.mb-4 Three steps to start tracking your documents.
+        ol.list-unstyled.d-grid.gap-3.mb-0
+          each step, stepIndex in onboardingSteps
+            li.d-flex.align-items-start.gap-3(data-onboarding-step=(stepIndex + 1) data-step-done=(step.done ? 'true' : 'false'))
+              span.badge.rounded-pill.fs-6.flex-shrink-0(class=(step.done ? 'text-bg-success' : 'text-bg-primary'))
+                if step.done
+                  +icon('check-lg')
+                  span.visually-hidden Done: step #{stepIndex + 1}
+                else
+                  span.visually-hidden Step
+                  = ' ' + (stepIndex + 1)
+              div
+                h3.h6.mb-1(class=(step.done ? 'text-body-secondary' : null))= step.title
+                p.small.text-body-secondary.mb-2= step.text
+                if step.done
+                  span.small.text-success-emphasis
+                    +icon('check-circle-fill')(class='me-1')
+                    | Done
+                else if step.locked
+                  span.small.text-body-secondary Complete the steps above first.
+                else
+                  +linkButton(step.href, step.label, { icon: step.icon, variant: 'primary', size: 'sm' })
+
+  .row.row-cols-1.row-cols-sm-2.row-cols-xl-4.g-3.mb-4
+    each card in summaryCards
+      -
+        var cardMeta = statusMeta[card.status];
+        var cardColor = cardMeta.badgeClass.replace('text-bg-', '');
+      .col
+        .card.h-100.shadow-sm.border-0.border-start.border-4(class=('border-' + cardColor))
+          .card-body.d-flex.align-items-center.gap-3
+            span.d-inline-flex.rounded-circle.p-3.fs-4.lh-1(class=['bg-' + cardColor + '-subtle', 'text-' + cardColor + '-emphasis'])
+              +icon(cardMeta.icon)
+            div
+              .fs-2.fw-semibold.lh-1.mb-1(data-summary-count=card.status)= summary[card.status]
+              a.stretched-link.link-body-emphasis.link-underline-opacity-0.link-underline-opacity-75-hover.fw-semibold(href=('/documents?status=' + card.status))= cardMeta.label
+              .small.text-body-secondary= card.hint
+
+  .row.g-4
+    .col-xl-7
+      section.card.shadow-sm.h-100(aria-labelledby='attention-title')
+        .card-header.d-flex.align-items-center.justify-content-between.gap-2
+          h2#attention-title.h6.mb-0 Needs attention
+          span.badge.rounded-pill(class=(attentionTotal ? 'text-bg-danger' : 'text-bg-secondary') data-attention-total)= attentionTotal
+        if attention.length
+          +documentsTable(attention, { showScope: false, caption: 'Documents that need attention' })(data-attention)
+          .card-footer.mt-auto.d-flex.flex-wrap.gap-3.small
+            if summary.expired
+              a.link-danger(href='/documents?status=expired') View all expired (#{summary.expired})
+            if summary.expiring
+              a(href='/documents?status=expiring') View all expiring soon (#{summary.expiring})
+        else
+          .card-body
+            if summary.total
+              +emptyState({ icon: 'check2-circle', title: 'All up to date', message: warningDays > 0 ? 'No document has expired or expires within ' + warningWindow + '.' : 'No document has expired or expires today.' })
+            else
+              +emptyState({ icon: 'inbox', title: 'Nothing to track yet', message: 'Documents that have expired or expire soon will be listed here.' })
+
+    .col-xl-5
+      section.card.shadow-sm.h-100(aria-labelledby='recent-title')
+        .card-header.d-flex.align-items-center.justify-content-between.gap-2
+          h2#recent-title.h6.mb-0 Recently added versions
+          a.small(href='/versions') All versions
+        if recentVersions.length
+          ul.list-group.list-group-flush(data-recent-versions)
+            each item in recentVersions
+              -
+                var recentVersion = item.version;
+                var recentDocument = recentVersion.document && recentVersion.document.url ? recentVersion.document : null;
+              li.list-group-item.d-flex.justify-content-between.align-items-start.gap-3
+                div
+                  if recentDocument
+                    a.fw-semibold.text-decoration-none(href=(recentDocument.url + '#version-' + recentVersion._id))= recentDocument.title
+                  else
+                    span.fw-semibold Unknown document
+                  .small.text-body-secondary Uploaded #{fmt.dateTime(recentVersion.createdAt)}
+                .text-end.small.flex-shrink-0
+                  .text-nowrap Expires #{fmt.date(recentVersion.expires_at)}
+                  .text-body-secondary= fmt.relativeDays(item.daysUntil)
+        else
+          .card-body
+            +emptyState({ icon: 'clock-history', title: 'No versions yet', message: 'Versions you upload will be listed here.' })

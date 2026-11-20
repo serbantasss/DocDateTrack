@@ -1,0 +1,53 @@
+//-
+  User administration (administrators only).
+  Locals: title, users (User documents sorted by username), roles (User.ROLES).
+  You cannot delete your own account, so your row has no delete button.
+extends ../layout
+include _mixins
+
+block content
+  +pageHeader({ title: title, icon: 'people', subtitle: 'Everyone who can sign in. Administrators can also manage users.' })
+    +linkButton('/users/new', 'Add user', { icon: 'person-plus', variant: 'primary' })
+
+  .card.shadow-sm
+    .table-responsive
+      table.table.table-hover.align-middle
+        caption.visually-hidden User accounts
+        thead
+          tr
+            th(scope='col') Username
+            th.d-none.d-md-table-cell(scope='col') Display name
+            th.d-none.d-sm-table-cell(scope='col') Email
+            th(scope='col') Role
+            th(scope='col') Last sign-in
+            th.d-none.d-lg-table-cell(scope='col') Created
+            th.table-actions(scope='col')
+              span.visually-hidden Actions
+        tbody
+          each user in users
+            -
+              var userPath = '/users/' + user._id;
+              var isCurrentRow = Boolean(currentUser) && String(user._id) === String(currentUser._id);
+            tr
+              td
+                .d-flex.flex-wrap.align-items-center.gap-2
+                  a.fw-semibold(href=userPath + '/edit')= user.username
+                  if isCurrentRow
+                    span.badge.rounded-pill.text-bg-info You
+              td.d-none.d-md-table-cell
+                if user.display_name
+                  = user.display_name
+                else
+                  span.text-body-secondary —
+              td.d-none.d-sm-table-cell= user.email
+              td
+                +roleBadge(user.role)
+              td.text-nowrap
+                +timestamp(user.last_login_at, 'Never')
+              td.d-none.d-lg-table-cell.text-nowrap
+                +timestamp(user.createdAt)
+              td.table-actions
+                .d-flex.justify-content-end.gap-1
+                  +linkButton(userPath + '/edit', 'Edit ' + user.username, { icon: 'pencil-square', iconOnly: true, size: 'sm' })
+                  unless isCurrentRow
+                    +deleteButton(userPath, { iconOnly: true, size: 'sm', label: 'Delete ' + user.username, confirm: 'Delete the user ' + user.username + '? They are signed out and can no longer sign in.' })

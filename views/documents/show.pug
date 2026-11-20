@@ -1,0 +1,132 @@
+//-
+  Document detail. Locals: title, document (owner and category populated), status, daysUntil
+  (of the current version), versions [{ version, daysUntil }] sorted by expiry date, latest
+  first — the first one is the current version.
+extends ../layout
+include ../mixins/documents
+
+block content
+  -
+    var docOwner = document.owner && document.owner.last_name ? document.owner : null;
+    var docCategory = document.category && document.category.name ? document.category : null;
+    var currentItem = versions.length ? versions[0] : null;
+    var currentVersion = currentItem ? currentItem.version : null;
+    var versionCount = versions.length;
+    var uploadUrl = '/versions/new?document=' + document._id;
+    var deleteConfirm =
+      versionCount === 0
+        ? 'Delete “' + document.title + '”? This cannot be undone.'
+        : versionCount === 1
+          ? 'Delete “' + document.title + '”? Its only version and its file are removed too. This cannot be undone.'
+          : 'Delete “' + document.title + '”? All ' + versionCount + ' versions and their files are removed too. This cannot be undone.';
+  +pageHeader({ title: document.title, icon: 'file-earmark-text', breadcrumbs: [{ label: 'Documents', href: '/documents' }] })
+    +linkButton(uploadUrl, 'Upload new version', { icon: 'cloud-arrow-up', variant: 'primary' })
+    +linkButton(document.url + '/edit', 'Edit notes', { icon: 'pencil-square' })
+    +deleteButton(document.url, { confirm: deleteConfirm })
+
+  .d-flex.flex-wrap.align-items-center.gap-2.mb-4(data-document-status=status)
+    +statusBadge(status)
+    if currentVersion
+      span.small.text-body-secondary
+        | Current version expires #{fmt.date(currentVersion.expires_at)} (#{fmt.relativeDays(daysUntil)})
+    else
+      span.small.text-body-secondary No version uploaded yet
+
+  .row.g-4.mb-4
+    .col-lg-5
+      section.card.shadow-sm.h-100(aria-labelledby='details-title')
+        .card-header
+          h2#details-title.h6.mb-0 Details
+        .card-body
+          dl.row.mb-0
+            dt.col-sm-4 Owner
+            dd.col-sm-8
+              if docOwner
+                a(href=docOwner.url)= docOwner.name
+              else
+                span.text-body-secondary Unknown owner
+            dt.col-sm-4 Category
+            dd.col-sm-8
+              if docCategory
+                .d-flex.flex-wrap.align-items-center.gap-2
+                  a(href=docCategory.url)= docCategory.name
+                  +scopeBadge(docCategory.scope)
+              else
+                span.text-body-secondary Unknown category
+            dt.col-sm-4 Versions
+            dd.col-sm-8= versionCount
+            dt.col-sm-4 Notes
+            dd.col-sm-8.mb-0
+              if document.notes
+                +multiline(document.notes)
+              else
+                span.text-body-secondary No notes
+
+    .col-lg-7
+      section.card.shadow-sm.h-100(aria-labelledby='current-title')
+        .card-header.d-flex.align-items-center.justify-content-between.gap-2
+          h2#current-title.h6.mb-0 Current version
+          if currentVersion
+            a.small(href=(currentVersion.url + '/edit')) Edit version
+        .card-body
+          if currentVersion
+            dl.row.mb-0(data-current-version=String(currentVersion._id))
+              dt.col-sm-4 Issued
+              dd.col-sm-8= fmt.date(currentVersion.issued_at)
+              dt.col-sm-4 Expires
+              dd.col-sm-8
+                +expiry(currentVersion.expires_at, currentItem.daysUntil)
+              dt.col-sm-4 File
+              dd.col-sm-8(class=(currentVersion.notes ? null : 'mb-0'))
+                +versionFile(currentVersion)(class='text-break')
+              if currentVersion.notes
+                dt.col-sm-4 Notes
+                dd.col-sm-8.mb-0
+                  +multiline(currentVersion.notes)
+          else
+            +emptyState({ icon: 'cloud-arrow-up', title: 'No version yet', message: 'Upload the first version to start tracking the expiry date of this document.', action: { href: uploadUrl, label: 'Upload first version', icon: 'cloud-arrow-up' } })
+
+  section.card.shadow-sm(aria-labelledby='versions-title')
+    .card-header.d-flex.align-items-center.justify-content-between.gap-2
+      h2#versions-title.h6.mb-0 All versions
+      span.badge.rounded-pill.text-bg-secondary= versionCount
+    if versions.length
+      .table-responsive
+        table.table.table-hover.align-middle.mb-0
+          caption.visually-hidden Versions of #{document.title}, latest expiry date first
+          thead
+            tr
+              th(scope='col') Issued
+              th(scope='col') Expires
+              th(scope='col') File
+              th(scope='col') Notes
+              th(scope='col') Uploaded
+              th.table-actions(scope='col')
+                span.visually-hidden Actions
+          tbody
+            each item, itemIndex in versions
+              -
+                var rowVersion = item.version;
+                var versionDeleteConfirm = 'Delete the version that expires on ' + fmt.date(rowVersion.expires_at) + '?' + (rowVersion.file ? ' Its uploaded file is deleted too.' : '') + ' This cannot be undone.';
+              tr(id=('version-' + rowVersion._id))
+                td.text-nowrap= fmt.date(rowVersion.issued_at)
+                td
+                  .d-flex.align-items-start.gap-2
+                    +expiry(rowVersion.expires_at, item.daysUntil)
+                    if itemIndex === 0
+                      span.badge.rounded-pill.text-bg-primary Current
+                td
+                  +versionFile(rowVersion)
+                td.small
+                  if rowVersion.notes
+                    +multiline(rowVersion.notes)
+                  else
+                    span.text-body-secondary —
+                td.small.text-body-secondary.text-nowrap= fmt.dateTime(rowVersion.createdAt)
+                td.table-actions
+                  .d-flex.justify-content-end.gap-1
+                    +linkButton(rowVersion.url + '/edit', 'Edit version', { icon: 'pencil-square', iconOnly: true, size: 'sm' })
+                    +deleteButton(rowVersion.url, { iconOnly: true, size: 'sm', label: 'Delete version', confirm: versionDeleteConfirm })
+    else
+      .card-body
+        p.text-body-secondary.mb-0 This document has no versions yet.

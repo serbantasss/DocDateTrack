@@ -1,0 +1,5 @@
+//- Flash messages from connect-flash (`messages` local: { error, warning, success, info } arrays).
+if messages
+  each flashType in ['error', 'warning', 'success', 'info']
+    each flashText in [].concat(messages[flashType] || [])
+      +alert(flashType, { message: flashText, dismissible: true })

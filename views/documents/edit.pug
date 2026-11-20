@@ -1,0 +1,28 @@
+//-
+  Edit the notes of a document (owner and category cannot change). Locals: title,
+  document (owner and category populated), values { notes }, errors.
+extends ../layout
+
+block content
+  - var docOwner = document.owner && document.owner.last_name ? document.owner : null;
+  - var docCategory = document.category && document.category.name ? document.category : null;
+  +pageHeader({ title: 'Edit notes', subtitle: document.title, icon: 'pencil-square', breadcrumbs: [{ label: 'Documents', href: '/documents' }, { label: document.title, href: document.url }] })
+
+  .row
+    .col-lg-9.col-xl-7
+      .card.shadow-sm
+        .card-body.p-4
+          dl.row.mb-4
+            dt.col-sm-3 Owner
+            dd.col-sm-9= docOwner ? docOwner.name : 'Unknown owner'
+            dt.col-sm-3 Category
+            dd.col-sm-9.mb-0
+              if docCategory
+                = docCategory.name
+                +scopeBadge(docCategory.scope)(class='ms-2')
+              else
+                | Unknown category
+          +errorSummary()
+          +form({ action: document.url, method: 'PUT' })
+            +textarea({ name: 'notes', label: 'Notes', rows: 5, maxlength: 2000, autofocus: true, help: 'Up to 2000 characters. The owner and the category of a document cannot be changed.' })
+            +submit('Save notes', { icon: 'check-lg', cancel: document.url })

@@ -1,0 +1,90 @@
+name: Bug report
+description: Report something in DocDateTrack that is broken or does not work as documented.
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please search the [existing issues](https://github.com/serbantasss/DocDateTrack/issues) first — it may already have been reported.
+
+        **Do not report security vulnerabilities here.** Follow the [security policy](https://github.com/serbantasss/DocDateTrack/security/policy) instead.
+
+        This issue will be public. Leave out personal data (names, email addresses, document numbers, scans) and secrets (passwords, `SESSION_SECRET`, SMTP credentials, connection strings).
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The DocDateTrack release or Docker image tag you are running, or the commit (`git rev-parse --short HEAD`) if you run it from source.
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment method
+      description: How do you run DocDateTrack?
+      options:
+        - Docker (official image or Docker Compose)
+        - Node.js (npm start)
+        - Other (please describe under Environment)
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Browser name and version, if the problem shows up in the web interface.
+      placeholder: Firefox 145
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Anything else about your setup that might matter, such as the operating system, MongoDB version, reverse proxy and relevant settings. Never include secrets.
+      placeholder: |
+        OS: Ubuntu 24.04
+        MongoDB: 8.0
+        Reverse proxy: Caddy
+        Settings: REMINDERS_ENABLED=true, TRUST_PROXY=1
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we make the problem happen? Use made-up data.
+      placeholder: |
+        1. Go to …
+        2. Click …
+        3. See the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happened instead? Include error messages and, for problems in the web interface, screenshots with personal data removed or blurred.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Server logs (for example from `docker compose logs`) or the browser console. Redact names, email addresses, document details, cookies, tokens and passwords before pasting. The text is formatted as code automatically, so there is no need for backticks.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues, and this bug has not been reported yet.
+          required: true
+        - label: I removed personal data and secrets from this report, including logs and screenshots.
+          required: true
+        - label: This is not a security vulnerability (those are reported privately, as described in the security policy).
+          required: true

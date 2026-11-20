@@ -1,0 +1,55 @@
+//-
+  All versions, newest uploads first. Locals: title, rows [{ version (document, owner and
+  category populated), daysUntil }] of the current page, pagination.
+extends ../layout
+include ../mixins/documents
+
+block content
+  +pageHeader({ title: 'Versions', subtitle: 'Every uploaded version, newest first.', icon: 'clock-history' })
+    +linkButton('/versions/new', 'Upload version', { icon: 'cloud-arrow-up', variant: 'primary' })
+
+  if !rows.length
+    .card.shadow-sm
+      .card-body
+        +emptyState({ icon: 'clock-history', title: 'No versions yet', message: 'A version records the issue and expiry dates of a document, optionally with a scan of it.', action: { href: '/versions/new', label: 'Upload version', icon: 'cloud-arrow-up' } })
+  else
+    .card.shadow-sm
+      .table-responsive
+        table.table.table-hover.align-middle.mb-0
+          caption.visually-hidden Versions, newest uploads first
+          thead
+            tr
+              th(scope='col') Document
+              th(scope='col') Issued
+              th(scope='col') Expires
+              th(scope='col') File
+              th(scope='col') Uploaded
+              th.table-actions(scope='col')
+                span.visually-hidden Actions
+          tbody
+            each item in rows
+              -
+                var rowVersion = item.version;
+                var rowDocument = rowVersion.document && rowVersion.document.url ? rowVersion.document : null;
+                var versionDeleteConfirm = 'Delete the version' + (rowDocument ? ' of “' + rowDocument.title + '”' : '') + ' that expires on ' + fmt.date(rowVersion.expires_at) + '?' + (rowVersion.file ? ' Its uploaded file is deleted too.' : '') + ' This cannot be undone.';
+              tr(data-version-id=String(rowVersion._id))
+                td
+                  if rowDocument
+                    a.fw-semibold.text-decoration-none(href=(rowDocument.url + '#version-' + rowVersion._id))= rowDocument.title
+                  else
+                    span.text-body-secondary Unknown document
+                td.text-nowrap= fmt.date(rowVersion.issued_at)
+                td
+                  +expiry(rowVersion.expires_at, item.daysUntil)
+                td
+                  +versionFile(rowVersion)
+                td.small.text-body-secondary.text-nowrap= fmt.dateTime(rowVersion.createdAt)
+                td.table-actions
+                  .d-flex.justify-content-end.gap-1
+                    +linkButton(rowVersion.url + '/edit', 'Edit version', { icon: 'pencil-square', iconOnly: true, size: 'sm' })
+                    +deleteButton(rowVersion.url, { iconOnly: true, size: 'sm', label: 'Delete version', confirm: versionDeleteConfirm })
+    .d-flex.flex-wrap.align-items-center.justify-content-between.gap-3.mt-3
+      p.small.text-body-secondary.mb-0
+        | Showing #{pagination.from}–#{pagination.to} of #{pagination.total}
+        = pagination.total === 1 ? ' version' : ' versions'
+      +pagination(pagination, { label: 'Pages of versions' })

@@ -1,80 +1,89 @@
 /*!
  * Color mode toggler for Bootstrap's docs (https://getbootstrap.com/)
- * Copyright 2011-2023 The Bootstrap Authors
+ * Copyright 2011-2025 The Bootstrap Authors
  * Licensed under the Creative Commons Attribution 3.0 Unported License.
  */
 
+/*
+ * Adapted for DocDateTrack: Bootstrap Icons instead of an SVG sprite, any number of toggles per
+ * page (`[data-theme-switcher]` containing `[data-theme-toggle]` and `[data-bs-theme-value]`
+ * items), "auto" as the default choice, and storage errors (e.g. disabled storage) are ignored.
+ * Loaded in <head> so the stored colour mode applies before the first paint.
+ */
 (() => {
-  'use strict'
+  'use strict';
 
-  const getStoredTheme = () => localStorage.getItem('theme')
-  const setStoredTheme = theme => localStorage.setItem('theme', theme)
+  const THEMES = ['light', 'dark', 'auto'];
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+  const getStoredTheme = () => {
+    try {
+      return localStorage.getItem('theme');
+    } catch {
+      return null;
+    }
+  };
+
+  const setStoredTheme = (theme) => {
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {
+      // Storage unavailable: the choice applies to this page only.
+    }
+  };
 
   const getPreferredTheme = () => {
-    const storedTheme = getStoredTheme()
-    if (storedTheme) {
-      return storedTheme
-    }
+    const storedTheme = getStoredTheme();
+    return THEMES.includes(storedTheme) ? storedTheme : 'auto';
+  };
 
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }
+  const setTheme = (theme) => {
+    const resolved = theme === 'auto' ? (prefersDark.matches ? 'dark' : 'light') : theme;
+    document.documentElement.setAttribute('data-bs-theme', resolved);
+  };
 
-  const setTheme = theme => {
-    if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-bs-theme', 'dark')
-    } else {
-      document.documentElement.setAttribute('data-bs-theme', theme)
-    }
-  }
+  setTheme(getPreferredTheme());
 
-  setTheme(getPreferredTheme())
+  const showActiveTheme = (theme, focusSwitcher = null) => {
+    document.querySelectorAll('[data-theme-switcher]').forEach((switcher) => {
+      const toggle = switcher.querySelector('[data-theme-toggle]');
+      const activeItem = switcher.querySelector(`[data-bs-theme-value="${theme}"]`);
+      if (!toggle || !activeItem) return;
 
-  const showActiveTheme = (theme, focus = false) => {
-    const themeSwitcher = document.querySelector('#bd-theme')
+      switcher.querySelectorAll('[data-bs-theme-value]').forEach((item) => {
+        item.classList.remove('active');
+        item.setAttribute('aria-pressed', 'false');
+      });
+      activeItem.classList.add('active');
+      activeItem.setAttribute('aria-pressed', 'true');
 
-    if (!themeSwitcher) {
-      return
-    }
+      const activeIcon = toggle.querySelector('.theme-icon-active');
+      if (activeIcon && activeItem.dataset.themeIcon) {
+        activeIcon.className = `bi ${activeItem.dataset.themeIcon} theme-icon-active`;
+      }
+      toggle.setAttribute('aria-label', `Toggle theme (${theme})`);
 
-    const themeSwitcherText = document.querySelector('#bd-theme-text')
-    const activeThemeIcon = document.querySelector('.theme-icon-active')
-    const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)
-    const svgOfActiveBtn = btnToActive.querySelector('i').getAttribute('class')
-    console.log(btnToActive.cl);
-    document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
-      element.classList.remove('active')
-      element.setAttribute('aria-pressed', 'false')
-    })
+      if (switcher === focusSwitcher) toggle.focus();
+    });
+  };
 
-    btnToActive.classList.add('active')
-    btnToActive.setAttribute('aria-pressed', 'true')
-    activeThemeIcon.setAttribute('class', svgOfActiveBtn)
-    const themeSwitcherLabel = `${themeSwitcherText.textContent} (${btnToActive.dataset.bsThemeValue})`
-    themeSwitcher.setAttribute('aria-label', themeSwitcherLabel)
-
-    if (focus) {
-      themeSwitcher.focus()
-    }
-  }
-
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    const storedTheme = getStoredTheme()
+  prefersDark.addEventListener('change', () => {
+    const storedTheme = getStoredTheme();
     if (storedTheme !== 'light' && storedTheme !== 'dark') {
-      setTheme(getPreferredTheme())
+      setTheme(getPreferredTheme());
     }
-  })
+  });
 
   window.addEventListener('DOMContentLoaded', () => {
-    showActiveTheme(getPreferredTheme())
+    showActiveTheme(getPreferredTheme());
 
-    document.querySelectorAll('[data-bs-theme-value]')
-      .forEach(toggle => {
-        toggle.addEventListener('click', () => {
-          const theme = toggle.getAttribute('data-bs-theme-value')
-          setStoredTheme(theme)
-          setTheme(theme)
-          showActiveTheme(theme, true)
-        })
-      })
-  })
-})()
+    document.querySelectorAll('[data-bs-theme-value]').forEach((item) => {
+      item.addEventListener('click', () => {
+        const theme = item.getAttribute('data-bs-theme-value');
+        setStoredTheme(theme);
+        setTheme(theme);
+        showActiveTheme(theme, item.closest('[data-theme-switcher]'));
+      });
+    });
+  });
+})();

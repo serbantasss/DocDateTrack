@@ -1,0 +1,182 @@
+//-
+  views/mixins/ui.pug — presentational helpers (Bootstrap 5.3 + Bootstrap Icons)
+  ==========================================================================
+  Included by views/layout.pug and views/layouts/auth.pug, so every page that
+  extends a layout can call these mixins. The file holds mixin definitions
+  only, so it may also be included at the top of an extending template.
+  Icon names may be given with or without the `bi-` prefix ('trash3' or
+  'bi-trash3'). Attributes added after a call go to the mixin's root element
+  unless stated otherwise:  +statusBadge('valid')(class='ms-2')
+
+  +icon(name)
+    Decorative icon: <i class="bi bi-NAME" aria-hidden="true">. Pair icon-only
+    controls with an aria-label or visually hidden text.
+    Example:  +icon('cloud-arrow-up')(class='me-1')
+
+  +pageHeader(opts)  — page title row; the block holds action buttons (optional)
+    opts.title        h1 text (or pass the title string instead of opts)
+    opts.subtitle     muted line under the title
+    opts.icon         icon shown before the title
+    opts.breadcrumbs  [{ label, href }] ancestors; the current page (`crumb` or
+                      `title`) is appended unless the last item has no href
+    opts.crumb        breadcrumb label of the current page (default: title)
+    opts.class        wrapper margin classes (default 'mb-4')
+    Example:  +pageHeader({ title: owner.name, subtitle: 'Owner', breadcrumbs: [{ label: 'Owners', href: '/owners' }] })
+                a.btn.btn-outline-secondary(href=`${owner.url}/edit`) Edit
+
+  +statusBadge(status, opts)  — badge from the `statusMeta` local (icon + label)
+    status       'expired'|'expiring'|'valid'|'missing' (unknown values: grey badge)
+    opts.label   override the label text
+    opts.title   tooltip text (e.g. the expiry date)
+    Example:  +statusBadge(row.status, { title: `Expires ${fmt.date(row.currentVersion.expires_at)}` })
+
+  +scopeBadge(scope, opts)  — subtle badge with the label from the `scopes` local
+    scope        'personal'|'company'|'employee'
+    opts.label   override the label text
+    Example:  +scopeBadge(category.scope)
+
+  +emptyState(opts)  — centred placeholder for empty lists; the block adds custom content
+    opts.icon     default 'inbox'
+    opts.title    short heading (h2)
+    opts.message  explanatory text (or pass the message string instead of opts)
+    opts.action   { href, label, icon } primary call-to-action button
+    Example:  +emptyState({ icon: 'people', title: 'No owners yet', message: 'Owners are the people or companies whose documents you track.', action: { href: '/owners/new', label: 'Add owner', icon: 'person-plus' } })
+
+  +alert(type, opts)  — Bootstrap alert with an icon; the block adds content
+    type              'success'|'info'|'warning'|'error'|'danger'|'primary'|'secondary'
+    opts.message      text (or pass the message string instead of opts)
+    opts.title        bold first line
+    opts.dismissible  boolean — close button (needs Bootstrap JS)
+    Example:  +alert('info', { title: 'Email reminders are off', message: 'Set REMINDERS_ENABLED=true to enable them.' })
+
+  +linkButton(href, label, opts)  — link styled as a button
+    opts.icon      icon name
+    opts.variant   default 'outline-secondary'
+    opts.size      'sm'|'lg'
+    opts.iconOnly  boolean — icon only, label becomes tooltip and aria-label
+    Example:  +linkButton(`${owner.url}/edit`, 'Edit', { icon: 'pencil-square', iconOnly: true, size: 'sm' })
+
+mixin icon(name)
+  i.bi(class=(String(name).indexOf('bi-') === 0 ? String(name) : 'bi-' + name) aria-hidden='true')&attributes(attributes)
+
+mixin pageHeader(opts)
+  -
+    var headerOpts = typeof opts === 'string' ? { title: opts } : opts || {};
+    var crumbs = Array.isArray(headerOpts.breadcrumbs) ? headerOpts.breadcrumbs.filter(Boolean) : [];
+    var appendCurrent = crumbs.length > 0 && Boolean(crumbs[crumbs.length - 1].href);
+  if crumbs.length
+    nav(aria-label='Breadcrumb')
+      ol.breadcrumb.mb-2
+        each crumb, crumbIndex in crumbs
+          - var isCurrentCrumb = !appendCurrent && crumbIndex === crumbs.length - 1
+          li.breadcrumb-item(class=(isCurrentCrumb ? 'active' : null) aria-current=(isCurrentCrumb ? 'page' : null))
+            if crumb.href && !isCurrentCrumb
+              a(href=crumb.href)= crumb.label
+            else
+              = crumb.label
+        if appendCurrent
+          li.breadcrumb-item.active(aria-current='page')= headerOpts.crumb || headerOpts.title
+  div(class=['d-flex', 'flex-wrap', 'align-items-start', 'justify-content-between', 'gap-3', headerOpts.class !== undefined ? headerOpts.class : 'mb-4'])&attributes(attributes)
+    div
+      h1.h3.mb-0.text-break
+        if headerOpts.icon
+          +icon(headerOpts.icon)(class='text-body-secondary me-2')
+        = headerOpts.title
+      if headerOpts.subtitle
+        p.text-body-secondary.mt-1.mb-0= headerOpts.subtitle
+    if block
+      .d-flex.flex-wrap.align-items-center.gap-2
+        block
+
+mixin statusBadge(status, opts)
+  -
+    var badgeOpts = opts || {};
+    var meta = (statusMeta && statusMeta[status]) || {
+      label: status ? String(status) : 'Unknown',
+      badgeClass: 'text-bg-secondary',
+      icon: 'bi-question-circle',
+    };
+  span(
+    class=['badge', 'rounded-pill', meta.badgeClass]
+    title=badgeOpts.title
+    data-bs-toggle=(badgeOpts.title ? 'tooltip' : null)
+  )&attributes(attributes)
+    if meta.icon
+      +icon(meta.icon)(class='me-1')
+    = badgeOpts.label || meta.label
+
+mixin scopeBadge(scope, opts)
+  -
+    var scopeOpts = opts || {};
+    var scopeStyle =
+      {
+        personal: { color: 'primary', icon: 'person' },
+        company: { color: 'info', icon: 'building' },
+        employee: { color: 'secondary', icon: 'person-badge' },
+      }[scope] || { color: 'secondary', icon: 'tag' };
+    var scopeLabel = scopeOpts.label || (scopes && scopes[scope]) || (scope ? String(scope) : 'Unknown');
+  span(
+    class=['badge', 'rounded-pill', 'border', 'text-' + scopeStyle.color + '-emphasis', 'bg-' + scopeStyle.color + '-subtle', 'border-' + scopeStyle.color + '-subtle']
+  )&attributes(attributes)
+    +icon(scopeStyle.icon)(class='me-1')
+    = scopeLabel
+
+mixin emptyState(opts)
+  -
+    var emptyOpts = typeof opts === 'string' ? { message: opts } : opts || {};
+    var emptyAction = emptyOpts.action;
+  div(class=['empty-state', 'text-center', 'py-5', 'px-3'])&attributes(attributes)
+    +icon(emptyOpts.icon || 'inbox')(class='d-block display-5 text-body-tertiary mb-3')
+    if emptyOpts.title
+      h2.h5= emptyOpts.title
+    if emptyOpts.message
+      p.text-body-secondary= emptyOpts.message
+    if emptyAction && emptyAction.href
+      a.btn.btn-primary(href=emptyAction.href)
+        if emptyAction.icon
+          +icon(emptyAction.icon)(class='me-1')
+        = emptyAction.label
+    if block
+      block
+
+mixin alert(type, opts)
+  -
+    var alertOpts = typeof opts === 'string' ? { message: opts } : opts || {};
+    var alertVariant = type === 'error' ? 'danger' : type || 'info';
+    var alertIcon =
+      {
+        danger: 'exclamation-octagon-fill',
+        warning: 'exclamation-triangle-fill',
+        success: 'check-circle-fill',
+        info: 'info-circle-fill',
+        primary: 'info-circle-fill',
+      }[alertVariant] || 'info-circle';
+    var alertUrgent = alertVariant === 'danger' || alertVariant === 'warning';
+  div(
+    class=['alert', 'alert-' + alertVariant, 'd-flex', 'align-items-start', 'gap-2', alertOpts.dismissible ? 'alert-dismissible fade show' : null]
+    role=(alertUrgent ? 'alert' : 'status')
+  )&attributes(attributes)
+    +icon(alertIcon)(class='flex-shrink-0 mt-1')
+    div
+      if alertOpts.title
+        strong.d-block= alertOpts.title
+      if alertOpts.message
+        = alertOpts.message
+      if block
+        block
+    if alertOpts.dismissible
+      button.btn-close(type='button' data-bs-dismiss='alert' aria-label='Close')
+
+mixin linkButton(href, label, opts)
+  - var linkOpts = opts || {};
+  a(
+    href=href
+    class=['btn', 'btn-' + (linkOpts.variant || 'outline-secondary'), linkOpts.size ? 'btn-' + linkOpts.size : null]
+    aria-label=(linkOpts.iconOnly ? label : null)
+    title=(linkOpts.iconOnly ? label : null)
+    data-bs-toggle=(linkOpts.iconOnly ? 'tooltip' : null)
+  )&attributes(attributes)
+    if linkOpts.icon
+      +icon(linkOpts.icon)(class=(linkOpts.iconOnly ? null : 'me-1'))
+    if !linkOpts.iconOnly
+      = label

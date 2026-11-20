@@ -1,0 +1,152 @@
+name: Docker
+
+# Builds the container image on every pull request and publishes it to the GitHub Container
+# Registry: pushes to main → `edge` and `sha-<commit>`; release tags v1.2.3 → `1.2.3`, `1.2`,
+# `1` and `latest` (pre-release tags such as v1.3.0-rc.1 only get their exact version).
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.ref }}
+  # Superseded pull request builds are cancelled; every push to main and every release publishes.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  IMAGE: ghcr.io/serbantasss/docdatetrack
+  IMAGE_DESCRIPTION: Self-hosted web app that tracks the expiry dates of important documents and reminds you before they lapse.
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  test:
+    name: Build and smoke-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Makes compose.yaml run the image built below instead of a published one.
+      DOCDATETRACK_VERSION: ci
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the linux/amd64 image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: ${{ env.IMAGE }}:${{ env.DOCDATETRACK_VERSION }}
+          cache-from: type=gha
+
+      - name: Start DocDateTrack with Docker Compose
+        run: SESSION_SECRET="$(openssl rand -hex 32)" docker compose up --detach --wait --wait-timeout 120
+
+      - name: Smoke-test the running containers
+        # Health check, first-run redirect, a rendered page, the non-root user, a command-line task
+        # and a graceful shutdown (exit code 0 after SIGTERM).
+        run: |
+          url=http://127.0.0.1:8080
+          curl --fail --silent --show-error "$url/healthz"
+          redirect=$(curl --silent --output /dev/null --write-out '%{http_code} %{redirect_url}' "$url/")
+          test "$redirect" = "302 $url/register"
+          curl --fail --silent --show-error --output /dev/null "$url/register"
+          test "$(docker compose exec -T app id -u)" != 0
+          docker compose exec -T app npm run db:migrate -- --dry-run
+          docker compose stop app
+          container=$(docker compose ps --all --quiet app)
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$container")" = 0
+
+      - name: Show the container logs
+        if: failure()
+        run: docker compose logs
+
+      - name: Remove the containers and volumes
+        if: always()
+        run: docker compose down --volumes
+
+      - name: Build the image for all platforms
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish:
+    name: Publish
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate tags, labels and annotations
+        id: meta
+        uses: docker/metadata-action@v6
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=edge,branch=main
+            type=sha,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          labels: |
+            org.opencontainers.image.title=DocDateTrack
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+            org.opencontainers.image.licenses=MIT
+          annotations: |
+            org.opencontainers.image.title=DocDateTrack
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+            org.opencontainers.image.licenses=MIT
+
+      - name: Build and push the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha

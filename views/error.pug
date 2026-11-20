@@ -1,6 +1,53 @@
+//-
+  Error page. Locals: title, status, message, stack (development only).
+  Messages of 5xx errors are shown only together with a stack trace, so internal
+  details never reach users in production.
 extends layout
 
 block content
-    h1= message
-    h2= error.status
-    pre #{error.stack}
+  -
+    var errorStatus = Number(status) || 500;
+    var errorPages = {
+      400: { icon: 'exclamation-circle', heading: 'Bad request', text: 'The request could not be processed. Please check what you entered and try again.' },
+      401: { icon: 'lock', heading: 'Sign-in required', text: 'You need to sign in to continue.' },
+      403: { icon: 'shield-lock', heading: 'Access denied', text: 'You do not have permission to do that.' },
+      404: { icon: 'signpost-split', heading: 'Page not found', text: 'The page you are looking for does not exist or has been moved.' },
+      413: { icon: 'file-earmark-x', heading: 'File too large', text: 'The uploaded file is larger than the allowed limit. Please choose a smaller file.' },
+      429: { icon: 'hourglass-split', heading: 'Too many requests', text: 'Too many attempts in a short time. Please wait a few minutes and try again.' },
+      500: { icon: 'exclamation-octagon', heading: 'Something went wrong', text: 'An unexpected error occurred. Please try again; if the problem persists, contact your administrator.' },
+    };
+    var errorPage =
+      errorPages[errorStatus] ||
+      (errorStatus >= 500
+        ? errorPages[500]
+        : { icon: 'exclamation-circle', heading: 'Request failed', text: 'The request could not be completed.' });
+    var genericMessages = ['bad request', 'unauthorized', 'forbidden', 'not found', 'payload too large', 'request entity too large', 'content too large', 'too many requests', 'internal server error', 'something went wrong'];
+    var normalizedMessage = message ? String(message).trim().replace(/\.$/, '').toLowerCase() : '';
+    var errorDetail =
+      normalizedMessage && genericMessages.indexOf(normalizedMessage) === -1 && (errorStatus < 500 || stack)
+        ? String(message)
+        : errorPage.text;
+  .row.justify-content-center
+    .col-lg-9.col-xl-8
+      .text-center.py-4.py-md-5
+        unless currentUser
+          .mb-4
+            a.d-inline-flex.align-items-center.gap-2.link-body-emphasis.text-decoration-none(href='/')
+              img(src='/images/logo.svg' alt='' width='40' height='40')
+              span.fs-5.fw-semibold= appName || 'DocDateTrack'
+        +icon(errorPage.icon)(class='d-block display-4 text-body-tertiary mb-3')
+        p.text-body-secondary.fw-semibold.mb-1 Error #{errorStatus}
+        h1.h3.mb-3= errorPage.heading
+        p.lead.text-body-secondary.mb-4= errorDetail
+        if currentUser
+          a.btn.btn-primary(href='/')
+            +icon('speedometer2')(class='me-1')
+            | Back to the dashboard
+        else
+          a.btn.btn-primary(href='/login')
+            +icon('box-arrow-in-right')(class='me-1')
+            | Sign in
+      if stack
+        details.mb-4(open)
+          summary.text-body-secondary.mb-2 Stack trace
+          pre.error-stack.bg-body-tertiary.border.rounded.p-3.mb-0= stack

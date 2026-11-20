@@ -1,0 +1,11 @@
+//- Test email sent by `npm run reminders:send -- --test <email>`. Locals: sentAt, from, plus the
+//- layout locals.
+extends layout
+
+block content
+  p(style='margin:0 0 16px;') Hello,
+  p(style='margin:0 0 16px;')= `This is a test email from ${appName}. If you can read it, the email settings work and reminders can be delivered.`
+  p(style='margin:0;color:#495057;')= `Sent from ${from} on ${sentAt}.`
+
+block footer
+  p(style='margin:0;')= `You receive this email because someone sent a test email to this address from the ${appName} server at ${appUrl}.`

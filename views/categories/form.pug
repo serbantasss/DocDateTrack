@@ -1,0 +1,29 @@
+//-
+  Add/edit category form. Locals: title, category (null when adding; when editing an object with
+  _id, name and url), values { name, scope, description }, errors (express-validator `.mapped()`).
+extends ../layout
+
+block content
+  -
+    var categoryCrumbs = [{ label: 'Categories', href: '/categories' }];
+    if (category) categoryCrumbs.push({ label: category.name, href: category.url });
+    var scopeHints = {
+      personal: 'an individual’s own documents, such as a passport or a driving licence',
+      company: 'documents of the organisation itself, such as a business licence or an insurance policy',
+      employee: 'documents an organisation keeps for its staff, such as medical fitness certificates or work permits',
+    };
+    var scopeChoices = Object.keys(scopes).map(function (scopeKey) {
+      return { value: scopeKey, label: scopes[scopeKey] + ' — ' + (scopeHints[scopeKey] || '') };
+    });
+  +pageHeader({ title: category ? 'Edit category' : 'Add category', icon: category ? 'pencil-square' : 'tag', subtitle: category ? category.name : 'A type of document, for example “Passport” or “Fire safety certificate”.', breadcrumbs: categoryCrumbs, crumb: category ? 'Edit' : 'New category' })
+
+  .row
+    .col-lg-9.col-xl-8
+      +errorSummary(undefined, { ids: { scope: 'scope-' + Object.keys(scopes)[0] } })
+      +form({ action: category ? category.url : '/categories', method: category ? 'PUT' : 'POST' })
+        .card
+          .card-body
+            +input({ name: 'name', label: 'Name', maxlength: 100, required: true, autofocus: !category, help: 'Must be unique, e.g. “Passport” or “Liability insurance”.' })
+            +radios({ name: 'scope', label: 'Scope', options: scopeChoices, required: true, help: 'The scope groups categories and helps filter documents. Choose who the documents of this type belong to.' })
+            +textarea({ name: 'description', label: 'Description', rows: 3, maxlength: 500, help: 'Optional. Up to 500 characters.', class: '' })
+        +submit(category ? 'Save changes' : 'Add category', { icon: 'check-lg', cancel: category ? category.url : '/categories' })
